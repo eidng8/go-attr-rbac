@@ -5,13 +5,10 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
 )
 
 func (s Server) authMiddleware() StrictMiddlewareFunc {
-	return func(
-		f strictgin.StrictGinHandlerFunc, operationID string,
-	) strictgin.StrictGinHandlerFunc {
+	return func(f StrictHandlerFunc, operationID string) StrictHandlerFunc {
 		return func(gc *gin.Context, request interface{}) (interface{}, error) {
 			path := gc.FullPath()
 			// skip public paths
