@@ -6,7 +6,7 @@ require (
 	entgo.io/contrib v0.6.0
 	entgo.io/ent v0.14.1
 	github.com/eidng8/go-db v0.0.3
-	github.com/eidng8/go-ent v0.1.0
+	github.com/eidng8/go-ent v0.1.2
 	github.com/eidng8/go-utils v0.0.1
 	github.com/getkin/kin-openapi v0.127.0
 	github.com/gin-gonic/gin v1.10.0
@@ -30,6 +30,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
+	github.com/eidng8/go-url v0.0.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

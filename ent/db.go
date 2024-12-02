@@ -20,30 +20,6 @@ func (c *Client) Setup() error {
 	)
 }
 
-func (c *Client) Transaction(
-	ctx context.Context, cb func(context.Context, *Tx) (interface{}, error),
-) (interface{}, error) {
-	commited := false
-	tx, err := c.Tx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if !commited {
-			_ = tx.Rollback()
-		}
-	}()
-	ret, err := cb(ctx, tx)
-	if err != nil {
-		return nil, err
-	}
-	if err = tx.Commit(); err != nil {
-		return nil, err
-	}
-	commited = true
-	return ret, nil
-}
-
 func Connect() (*Client, func()) {
 	client := NewClient(Driver(entsql.OpenDB(db.ConnectX())))
 	return client, func() {

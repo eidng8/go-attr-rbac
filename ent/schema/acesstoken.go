@@ -24,11 +24,6 @@ func (AccessToken) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.OnDelete(entsql.Restrict),
 		edge.Annotation{StructTag: `json:"-"`},
-	}
-}
-
-func (AccessToken) Annotations() []schema.Annotation {
-	return []schema.Annotation{
 		schema.Comment("Stores revoked access tokens"),
 	}
 }
@@ -81,6 +76,7 @@ func (AccessToken) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).Ref("access_tokens").Unique().
 			Annotations(
+				entsql.OnDelete(entsql.Restrict),
 				entoas.ReadOperation(
 					entoas.OperationPolicy(entoas.PolicyExclude),
 				),

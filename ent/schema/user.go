@@ -68,10 +68,19 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	p := entoas.ListOperation(entoas.OperationPolicy(entoas.PolicyExclude))
 	return []ent.Edge{
-		edge.From("roles", Role.Type).Ref("users").Annotations(p),
-		edge.To("access_tokens", AccessToken.Type).Annotations(p),
-		edge.To("refresh_tokens", AccessToken.Type).Annotations(p),
-		edge.To("personal_tokens", PersonalToken.Type).Annotations(p),
+		edge.From("roles", Role.Type).Ref("users").Annotations(
+			p, entsql.OnDelete(entsql.Restrict),
+			entoas.ListOperation(entoas.OperationPolicy(entoas.PolicyExpose)),
+		),
+		edge.To("access_tokens", AccessToken.Type).Annotations(
+			p, entsql.OnDelete(entsql.Restrict),
+		),
+		edge.To("refresh_tokens", AccessToken.Type).Annotations(
+			p, entsql.OnDelete(entsql.Restrict),
+		),
+		edge.To("personal_tokens", PersonalToken.Type).Annotations(
+			p, entsql.OnDelete(entsql.Restrict),
+		),
 	}
 }
 

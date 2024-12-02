@@ -11,19 +11,19 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/personaltoken"
 )
 
-type ListPersonalTokenPaginateResponse struct {
+type ListPermissionTokenPaginateResponse struct {
 	*paginate.PaginatedList[ent.PersonalToken]
 }
 
-func (response ListPersonalTokenPaginateResponse) VisitListPersonalTokenResponse(w http.ResponseWriter) error {
+func (response ListPermissionTokenPaginateResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	return json.NewEncoder(w).Encode(response)
 }
 
-func (s Server) ListPersonalToken(
-	ctx context.Context, _ ListPersonalTokenRequestObject,
-) (ListPersonalTokenResponseObject, error) {
+func (s Server) ListPermission(
+	ctx context.Context, request ListPermissionRequestObject,
+) (ListPermissionResponseObject, error) {
 	gc, ok := ctx.(*gin.Context)
 	if !ok {
 		return nil, ErrInvalidContext
@@ -39,5 +39,5 @@ func (s Server) ListPersonalToken(
 	if err != nil {
 		return nil, err
 	}
-	return ListPersonalTokenPaginateResponse{PaginatedList: page}, nil
+	return ListPermissionTokenPaginateResponse{PaginatedList: page}, nil
 }

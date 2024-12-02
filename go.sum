@@ -35,8 +35,10 @@ github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 h1:PRxIJD8XjimM5aT
 github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936/go.mod h1:ttYvX5qlB+mlV1okblJqcSMtR4c52UKxDiX9GRBS8+Q=
 github.com/eidng8/go-db v0.0.3 h1:BooY+FfusjrFuvfH3oh0KWdrYqjszjDRLVpQD6nD9r0=
 github.com/eidng8/go-db v0.0.3/go.mod h1:lSIPSRAbBUF21DmsSefPyakvWA6cAzQtBVTuyF5WloI=
-github.com/eidng8/go-ent v0.1.0 h1:mfIGwD+TsOVlvYpWqdycRZAKSLW/QSy1DygKKzOb+zc=
-github.com/eidng8/go-ent v0.1.0/go.mod h1:v/DAueiofyPC4F1R+u7jM/dIOt2E9mjrERPVGKWBqFo=
+github.com/eidng8/go-ent v0.1.2 h1:pb78E2OMhADrj4Bj8c/Ez4DGqTScXf8SrRfxulYxPBI=
+github.com/eidng8/go-ent v0.1.2/go.mod h1:v/DAueiofyPC4F1R+u7jM/dIOt2E9mjrERPVGKWBqFo=
+github.com/eidng8/go-url v0.0.2 h1:zVkb+DJYRvZ4Curt5Ebg2hiT+raohJb0OrdE8P9ROEQ=
+github.com/eidng8/go-url v0.0.2/go.mod h1:jOFyorb+Kg6jCJquQhXRTp48c5jlqyBrTwNWflctAJg=
 github.com/eidng8/go-utils v0.0.1 h1:IncQ/RTPw59V14wHJRFqwQW2Nsvk7N+44k2JxvvsbMQ=
 github.com/eidng8/go-utils v0.0.1/go.mod h1:UCyCOAZVhR0+vnMa+Hkr6CiFJyoHIbqU8dptAplqVx0=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=

@@ -23,7 +23,7 @@ func (PersonalToken) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.OnDelete(entsql.Restrict),
 		entsql.WithComments(true),
-		schema.Comment("Stores issued long-lived access tokens"),
+		schema.Comment("Stores issued long-lived tokens"),
 		edge.Annotation{StructTag: `json:"-"`},
 	}
 }
@@ -82,6 +82,7 @@ func (PersonalToken) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", User.Type).Ref("personal_tokens").Unique().
 			Annotations(
+				entsql.OnDelete(entsql.Restrict),
 				entoas.ReadOperation(
 					entoas.OperationPolicy(entoas.PolicyExclude),
 				),

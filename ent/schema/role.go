@@ -8,11 +8,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	ee "github.com/eidng8/go-ent"
-	"github.com/eidng8/go-ent/softdelete"
 	"github.com/ogen-go/ogen"
-
-	gen "github.com/eidng8/go-attr-rbac/ent"
-	"github.com/eidng8/go-attr-rbac/ent/intercept"
 )
 
 type Role struct {
@@ -47,28 +43,9 @@ func (Role) Fields() []ent.Field {
 
 func (Role) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("permissions", Permission.Type).Annotations(),
-		edge.To("users", User.Type).Annotations(),
-	}
-}
-
-func (Role) Mixin() []ent.Mixin {
-	return []ent.Mixin{
-		// Comment out these when running `go generate` for the first time
-		softdelete.Mixin{},
-	}
-}
-
-func (Role) Interceptors() []ent.Interceptor {
-	return []ent.Interceptor{
-		// Comment out this when running `go generate` for the first time
-		softdelete.Interceptor(intercept.NewQuery),
-	}
-}
-
-func (Role) Hooks() []ent.Hook {
-	return []ent.Hook{
-		// Comment out this when running `go generate` for the first time
-		softdelete.Mutator[*gen.Client](),
+		edge.To("permissions", Permission.Type).
+			Annotations(entsql.OnDelete(entsql.Restrict)),
+		edge.To("users", User.Type).
+			Annotations(entsql.OnDelete(entsql.Restrict)),
 	}
 }
