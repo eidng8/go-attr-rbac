@@ -3,8 +3,12 @@ package api
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"net/http"
 	"net/url"
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/eidng8/go-utils"
@@ -14,28 +18,62 @@ import (
 	jsoniter "github.com/json-iterator/go"
 
 	"github.com/eidng8/go-attr-rbac/ent"
+	_ "github.com/eidng8/go-attr-rbac/ent/runtime"
+)
+
+const (
+	BaseUrlName      = "BASE_URL"
+	PrivateKeyName   = "PRIVATE_KEY"
+	HintSizeName     = "HINT_SIZE"
+	PublicOpsName    = "PUBLIC_OPERATIONS"
+	RefreshTokenPath = "/access-token/refresh"
 )
 
 var (
+	Log  = utils.NewLogger()
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 	ErrInvalidContext = errors.New("invalid_context")
 	ErrInvalidHeader  = errors.New("invalid_header")
 )
 
+type Server struct {
+	db *ent.Client
+	// base URL for the URL generation
+	baseUrl string
+	// private key for JWT token generation
+	secret []byte
+	// number of rows to return in hint requests
+	hintSize int
+	// list of public operations
+	publicOperations []string
+}
+
 func NewEngine(entClient *ent.Client) (*Server, *gin.Engine, error) {
-	key, err := getSecret()
-	if err != nil {
-		return nil, nil, err
+	if nil != entClient {
+		dbSetup(entClient)
 	}
-	swagger, err := GetSwagger()
-	if err != nil {
-		return nil, nil, err
-	}
-	swagger.Servers = nil
 	gin.SetMode(utils.GetEnvWithDefault(gin.EnvGinMode, gin.ReleaseMode))
 	engine := gin.Default()
-	server := NewApiServer(entClient, os.Getenv("BASE_URL"), key)
+	server := newApiServer(entClient)
+	newApiHandler(server, engine)
+	// swagger, err := newSwaggerServer()
+	return server, engine, nil
+}
+
+func newApiServer(db *ent.Client) *Server {
+	secret, err := getSecret()
+	utils.PanicIfError(err)
+	return &Server{
+		db:               db,
+		baseUrl:          os.Getenv(BaseUrlName),
+		secret:           secret,
+		hintSize:         getHintSize(5),
+		publicOperations: getPublicOperations(),
+	}
+}
+
+func newApiHandler(server *Server, engine *gin.Engine) ServerInterface {
 	handler := NewStrictHandler(
 		server, []StrictMiddlewareFunc{server.authMiddleware()},
 	)
@@ -53,35 +91,65 @@ func NewEngine(entClient *ent.Client) (*Server, *gin.Engine, error) {
 	//         // },
 	//     },
 	// )
-	swagger.AddServer(
-		&openapi3.Server{
-			URL:         server.baseUrl,
-			Description: "Hybrid RBAC and ABAC auth service",
-		},
-	)
-	// swagger.Security = *openapi3.NewSecurityRequirements()
-	return server, engine, nil
+	return handler
 }
 
-func NewApiServer(db *ent.Client, baseUrl string, secret []byte) *Server {
-	return &Server{db: db, baseUrl: baseUrl, secret: secret}
-}
-
-func getSecret() ([]byte, error) {
-	secret := os.Getenv("PRIVATE_KEY")
-	if secret == "" {
-		return nil, errors.New("PRIVATE_KEY environment variable is not set")
-	}
-	key := make([]byte, 32)
-	bytesRead, err := base64.NewDecoder(
-		base64.StdEncoding, strings.NewReader(secret),
-	).Read(key)
+//goland:noinspection GoUnusedFunction
+func newSwaggerServer() (*openapi3.T, error) {
+	swagger, err := GetSwagger()
 	if err != nil {
 		return nil, err
 	}
-	if bytesRead != 32 {
-		return nil,
-			errors.New("PRIVATE_KEY must be a 256-bit base64-encoded string")
+	swagger.Servers = nil
+	// swagger.AddServer(
+	//     &openapi3.Server{
+	//         URL:         server.baseUrl,
+	//         Description: "Hybrid RBAC and ABAC auth service",
+	//     },
+	// )
+	// swagger.Security = *openapi3.NewSecurityRequirements()
+	return swagger, nil
+}
+
+func getHintSize(defaultValue int64) int {
+	hintSize, err := strconv.ParseInt(
+		utils.GetEnvWithDefaultNE(HintSizeName, "5"), 10, 32,
+	)
+	utils.PanicIfError(err)
+	if hintSize < 1 {
+		hintSize = defaultValue
+	}
+	return int(hintSize)
+}
+
+func getPublicOperations() []string {
+	ops := slices.DeleteFunc(
+		strings.Split(os.Getenv(PublicOpsName), ","),
+		func(s string) bool { return "" == s },
+	)
+	if !slices.Contains(ops, "login") {
+		ops = append(ops, "login")
+	}
+	if !slices.Contains(ops, "refreshAccessToken") {
+		ops = append(ops, "refreshAccessToken")
+	}
+	// convert ops to CamelCase
+	for i, op := range ops {
+		ops[i] = strings.ToUpper(op[:1]) + op[1:]
+	}
+	return ops
+}
+
+func getSecret() ([]byte, error) {
+	secret := os.Getenv(PrivateKeyName)
+	if "" == secret {
+		return nil, fmt.Errorf(
+			"%s environment variable is not set", PrivateKeyName,
+		)
+	}
+	key, err := base64.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return nil, err
 	}
 	return key, nil
 }
@@ -107,10 +175,10 @@ func (s Server) setCookie(
 	gc.SetCookie(name, value, maxAge, path, s.Domain(), true, true)
 }
 
-type Server struct {
-	db      *ent.Client
-	baseUrl string
-	secret  []byte
+func (s Server) setToken(gc *gin.Context, accessToken, refreshToken string) {
+	gc.SetSameSite(http.SameSiteStrictMode)
+	s.setCookie(gc, AccessTokenName, accessToken, "/", 3600)
+	s.setCookie(gc, RefreshTokenName, refreshToken, RefreshTokenPath, 7*24*3600)
 }
 
 var _ StrictServerInterface = (*Server)(nil)

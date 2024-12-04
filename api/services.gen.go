@@ -30,7 +30,7 @@ type ServerInterface interface {
 	// (GET /access-token)
 	CheckAccessToken(c *gin.Context)
 	// Refresh current access token
-	// (PATCH /access-token)
+	// (POST /access-token/refresh)
 	RefreshAccessToken(c *gin.Context)
 	// Login
 	// (POST /login)
@@ -53,18 +53,30 @@ type ServerInterface interface {
 	// Create a new Permission
 	// (POST /permissions)
 	CreatePermission(c *gin.Context)
+	// Deletes a PersonalToken by ID
+	// (DELETE /personal-token/{id})
+	DeletePersonalToken(c *gin.Context, id uint64)
+	// Find a PersonalToken by ID
+	// (GET /personal-token/{id})
+	ReadPersonalToken(c *gin.Context, id uint64)
 	// List PersonalTokens
 	// (GET /personal-tokens)
 	ListPersonalToken(c *gin.Context, params ListPersonalTokenParams)
 	// Create a new PersonalToken
 	// (POST /personal-tokens)
 	CreatePersonalToken(c *gin.Context)
-	// Deletes a PersonalToken by ID
-	// (DELETE /personal-tokens/{id})
-	DeletePersonalToken(c *gin.Context, id uint64)
-	// Find a PersonalToken by ID
-	// (GET /personal-tokens/{id})
-	ReadPersonalToken(c *gin.Context, id uint64)
+	// Ping
+	// (GET /ping)
+	Ping(c *gin.Context)
+	// quick search permissions
+	// (GET /q/permissions)
+	HintPermissions(c *gin.Context, params HintPermissionsParams)
+	// quick search roles
+	// (GET /q/roles)
+	HintRoles(c *gin.Context, params HintRolesParams)
+	// quick search users
+	// (GET /q/users)
+	HintUsers(c *gin.Context, params HintUsersParams)
 	// Deletes a Role by ID
 	// (DELETE /role/{id})
 	DeleteRole(c *gin.Context, id uint32)
@@ -74,18 +86,21 @@ type ServerInterface interface {
 	// Updates a Role
 	// (PATCH /role/{id})
 	UpdateRole(c *gin.Context, id uint32)
+	// List attached Permissions
+	// (GET /role/{id}/permissions)
+	ListRolePermissions(c *gin.Context, id uint32, params ListRolePermissionsParams)
+	// Assign permissions to role
+	// (POST /role/{id}/permissions)
+	AssignPermissions(c *gin.Context, id uint32)
+	// List attached Users
+	// (GET /role/{id}/users)
+	ListRoleUsers(c *gin.Context, id uint32, params ListRoleUsersParams)
 	// List Roles
 	// (GET /roles)
 	ListRole(c *gin.Context, params ListRoleParams)
 	// Create a new Role
 	// (POST /roles)
 	CreateRole(c *gin.Context)
-	// List attached Permissions
-	// (GET /roles/{id}/permissions)
-	ListRolePermissions(c *gin.Context, id uint32, params ListRolePermissionsParams)
-	// List attached Users
-	// (GET /roles/{id}/users)
-	ListRoleUsers(c *gin.Context, id uint32, params ListRoleUsersParams)
 	// Deletes a User by ID
 	// (DELETE /user/{id})
 	DeleteUser(c *gin.Context, id uint64, params DeleteUserParams)
@@ -101,6 +116,9 @@ type ServerInterface interface {
 	// List attached Roles
 	// (GET /user/{id}/roles)
 	ListUserRoles(c *gin.Context, id uint64, params ListUserRolesParams)
+	// Assign roles to user
+	// (POST /user/{id}/roles)
+	AssignRoles(c *gin.Context, id uint64)
 	// List Users
 	// (GET /users)
 	ListUser(c *gin.Context, params ListUserParams)
@@ -321,6 +339,54 @@ func (siw *ServerInterfaceWrapper) CreatePermission(c *gin.Context) {
 	siw.Handler.CreatePermission(c)
 }
 
+// DeletePersonalToken operation middleware
+func (siw *ServerInterfaceWrapper) DeletePersonalToken(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.DeletePersonalToken(c, id)
+}
+
+// ReadPersonalToken operation middleware
+func (siw *ServerInterfaceWrapper) ReadPersonalToken(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ReadPersonalToken(c, id)
+}
+
 // ListPersonalToken operation middleware
 func (siw *ServerInterfaceWrapper) ListPersonalToken(c *gin.Context) {
 
@@ -368,19 +434,8 @@ func (siw *ServerInterfaceWrapper) CreatePersonalToken(c *gin.Context) {
 	siw.Handler.CreatePersonalToken(c)
 }
 
-// DeletePersonalToken operation middleware
-func (siw *ServerInterfaceWrapper) DeletePersonalToken(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint64
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
-		return
-	}
+// Ping operation middleware
+func (siw *ServerInterfaceWrapper) Ping(c *gin.Context) {
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -389,20 +444,29 @@ func (siw *ServerInterfaceWrapper) DeletePersonalToken(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.DeletePersonalToken(c, id)
+	siw.Handler.Ping(c)
 }
 
-// ReadPersonalToken operation middleware
-func (siw *ServerInterfaceWrapper) ReadPersonalToken(c *gin.Context) {
+// HintPermissions operation middleware
+func (siw *ServerInterfaceWrapper) HintPermissions(c *gin.Context) {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id uint64
+	// Parameter object where we will unmarshal all parameters from the context
+	var params HintPermissionsParams
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	// ------------- Required query parameter "q" -------------
+
+	if paramValue := c.Query("q"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument q is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "q", c.Request.URL.Query(), &params.Q)
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -413,7 +477,73 @@ func (siw *ServerInterfaceWrapper) ReadPersonalToken(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.ReadPersonalToken(c, id)
+	siw.Handler.HintPermissions(c, params)
+}
+
+// HintRoles operation middleware
+func (siw *ServerInterfaceWrapper) HintRoles(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params HintRolesParams
+
+	// ------------- Required query parameter "q" -------------
+
+	if paramValue := c.Query("q"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument q is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.HintRoles(c, params)
+}
+
+// HintUsers operation middleware
+func (siw *ServerInterfaceWrapper) HintUsers(c *gin.Context) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params HintUsersParams
+
+	// ------------- Required query parameter "q" -------------
+
+	if paramValue := c.Query("q"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandler(c, fmt.Errorf("Query argument q is required, but not found"), http.StatusBadRequest)
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "q", c.Request.URL.Query(), &params.Q)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter q: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.HintUsers(c, params)
 }
 
 // DeleteRole operation middleware
@@ -488,6 +618,116 @@ func (siw *ServerInterfaceWrapper) UpdateRole(c *gin.Context) {
 	siw.Handler.UpdateRole(c, id)
 }
 
+// ListRolePermissions operation middleware
+func (siw *ServerInterfaceWrapper) ListRolePermissions(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint32
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListRolePermissionsParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListRolePermissions(c, id, params)
+}
+
+// AssignPermissions operation middleware
+func (siw *ServerInterfaceWrapper) AssignPermissions(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint32
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AssignPermissions(c, id)
+}
+
+// ListRoleUsers operation middleware
+func (siw *ServerInterfaceWrapper) ListRoleUsers(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint32
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListRoleUsersParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage)
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListRoleUsers(c, id, params)
+}
+
 // ListRole operation middleware
 func (siw *ServerInterfaceWrapper) ListRole(c *gin.Context) {
 
@@ -541,92 +781,6 @@ func (siw *ServerInterfaceWrapper) CreateRole(c *gin.Context) {
 	}
 
 	siw.Handler.CreateRole(c)
-}
-
-// ListRolePermissions operation middleware
-func (siw *ServerInterfaceWrapper) ListRolePermissions(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint32
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListRolePermissionsParams
-
-	// ------------- Optional query parameter "page" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	// ------------- Optional query parameter "per_page" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.ListRolePermissions(c, id, params)
-}
-
-// ListRoleUsers operation middleware
-func (siw *ServerInterfaceWrapper) ListRoleUsers(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "id" -------------
-	var id uint32
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListRoleUsersParams
-
-	// ------------- Optional query parameter "page" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	// ------------- Optional query parameter "per_page" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "per_page", c.Request.URL.Query(), &params.PerPage)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter per_page: %w", err), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.ListRoleUsers(c, id, params)
 }
 
 // DeleteUser operation middleware
@@ -790,6 +944,30 @@ func (siw *ServerInterfaceWrapper) ListUserRoles(c *gin.Context) {
 	siw.Handler.ListUserRoles(c, id, params)
 }
 
+// AssignRoles operation middleware
+func (siw *ServerInterfaceWrapper) AssignRoles(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id uint64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.AssignRoles(c, id)
+}
+
 // ListUser operation middleware
 func (siw *ServerInterfaceWrapper) ListUser(c *gin.Context) {
 
@@ -874,7 +1052,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 
 	router.DELETE(options.BaseURL+"/access-token", wrapper.RevokeAccessToken)
 	router.GET(options.BaseURL+"/access-token", wrapper.CheckAccessToken)
-	router.PATCH(options.BaseURL+"/access-token", wrapper.RefreshAccessToken)
+	router.POST(options.BaseURL+"/access-token/refresh", wrapper.RefreshAccessToken)
 	router.POST(options.BaseURL+"/login", wrapper.Login)
 	router.POST(options.BaseURL+"/logout", wrapper.Logout)
 	router.DELETE(options.BaseURL+"/permission/:id", wrapper.DeletePermission)
@@ -882,22 +1060,28 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PATCH(options.BaseURL+"/permission/:id", wrapper.UpdatePermission)
 	router.GET(options.BaseURL+"/permissions", wrapper.ListPermission)
 	router.POST(options.BaseURL+"/permissions", wrapper.CreatePermission)
+	router.DELETE(options.BaseURL+"/personal-token/:id", wrapper.DeletePersonalToken)
+	router.GET(options.BaseURL+"/personal-token/:id", wrapper.ReadPersonalToken)
 	router.GET(options.BaseURL+"/personal-tokens", wrapper.ListPersonalToken)
 	router.POST(options.BaseURL+"/personal-tokens", wrapper.CreatePersonalToken)
-	router.DELETE(options.BaseURL+"/personal-tokens/:id", wrapper.DeletePersonalToken)
-	router.GET(options.BaseURL+"/personal-tokens/:id", wrapper.ReadPersonalToken)
+	router.GET(options.BaseURL+"/ping", wrapper.Ping)
+	router.GET(options.BaseURL+"/q/permissions", wrapper.HintPermissions)
+	router.GET(options.BaseURL+"/q/roles", wrapper.HintRoles)
+	router.GET(options.BaseURL+"/q/users", wrapper.HintUsers)
 	router.DELETE(options.BaseURL+"/role/:id", wrapper.DeleteRole)
 	router.GET(options.BaseURL+"/role/:id", wrapper.ReadRole)
 	router.PATCH(options.BaseURL+"/role/:id", wrapper.UpdateRole)
+	router.GET(options.BaseURL+"/role/:id/permissions", wrapper.ListRolePermissions)
+	router.POST(options.BaseURL+"/role/:id/permissions", wrapper.AssignPermissions)
+	router.GET(options.BaseURL+"/role/:id/users", wrapper.ListRoleUsers)
 	router.GET(options.BaseURL+"/roles", wrapper.ListRole)
 	router.POST(options.BaseURL+"/roles", wrapper.CreateRole)
-	router.GET(options.BaseURL+"/roles/:id/permissions", wrapper.ListRolePermissions)
-	router.GET(options.BaseURL+"/roles/:id/users", wrapper.ListRoleUsers)
 	router.DELETE(options.BaseURL+"/user/:id", wrapper.DeleteUser)
 	router.GET(options.BaseURL+"/user/:id", wrapper.ReadUser)
 	router.PATCH(options.BaseURL+"/user/:id", wrapper.UpdateUser)
 	router.POST(options.BaseURL+"/user/:id/restore", wrapper.RestoreUser)
 	router.GET(options.BaseURL+"/user/:id/roles", wrapper.ListUserRoles)
+	router.POST(options.BaseURL+"/user/:id/roles", wrapper.AssignRoles)
 	router.GET(options.BaseURL+"/users", wrapper.ListUser)
 	router.POST(options.BaseURL+"/users", wrapper.CreateUser)
 }
@@ -908,7 +1092,16 @@ type N400JSONResponse struct {
 	Status string       `json:"status"`
 }
 
-type N401Response struct {
+type N401JSONResponse struct {
+	Code   int          `json:"code"`
+	Errors *interface{} `json:"errors,omitempty"`
+	Status string       `json:"status"`
+}
+
+type N403JSONResponse struct {
+	Code   int          `json:"code"`
+	Errors *interface{} `json:"errors,omitempty"`
+	Status string       `json:"status"`
 }
 
 type N404JSONResponse struct {
@@ -953,11 +1146,22 @@ func (response RevokeAccessToken400JSONResponse) VisitRevokeAccessTokenResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
-type RevokeAccessToken401Response = N401Response
+type RevokeAccessToken401JSONResponse struct{ N401JSONResponse }
 
-func (response RevokeAccessToken401Response) VisitRevokeAccessTokenResponse(w http.ResponseWriter) error {
+func (response RevokeAccessToken401JSONResponse) VisitRevokeAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RevokeAccessToken403JSONResponse struct{ N403JSONResponse }
+
+func (response RevokeAccessToken403JSONResponse) VisitRevokeAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type RevokeAccessToken500JSONResponse struct{ N500JSONResponse }
@@ -993,11 +1197,22 @@ func (response CheckAccessToken400JSONResponse) VisitCheckAccessTokenResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type CheckAccessToken401Response = N401Response
+type CheckAccessToken401JSONResponse struct{ N401JSONResponse }
 
-func (response CheckAccessToken401Response) VisitCheckAccessTokenResponse(w http.ResponseWriter) error {
+func (response CheckAccessToken401JSONResponse) VisitCheckAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CheckAccessToken403JSONResponse struct{ N403JSONResponse }
+
+func (response CheckAccessToken403JSONResponse) VisitCheckAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type CheckAccessToken500JSONResponse struct{ N500JSONResponse }
@@ -1033,11 +1248,22 @@ func (response RefreshAccessToken400JSONResponse) VisitRefreshAccessTokenRespons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type RefreshAccessToken401Response = N401Response
+type RefreshAccessToken401JSONResponse struct{ N401JSONResponse }
 
-func (response RefreshAccessToken401Response) VisitRefreshAccessTokenResponse(w http.ResponseWriter) error {
+func (response RefreshAccessToken401JSONResponse) VisitRefreshAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RefreshAccessToken403JSONResponse struct{ N403JSONResponse }
+
+func (response RefreshAccessToken403JSONResponse) VisitRefreshAccessTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type RefreshAccessToken500JSONResponse struct{ N500JSONResponse }
@@ -1075,11 +1301,22 @@ func (response Login400JSONResponse) VisitLoginResponse(w http.ResponseWriter) e
 	return json.NewEncoder(w).Encode(response)
 }
 
-type Login401Response = N401Response
+type Login401JSONResponse struct{ N401JSONResponse }
 
-func (response Login401Response) VisitLoginResponse(w http.ResponseWriter) error {
+func (response Login401JSONResponse) VisitLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type Login403JSONResponse struct{ N403JSONResponse }
+
+func (response Login403JSONResponse) VisitLoginResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type Login500JSONResponse struct{ N500JSONResponse }
@@ -1106,11 +1343,22 @@ func (response Logout204Response) VisitLogoutResponse(w http.ResponseWriter) err
 	return nil
 }
 
-type Logout401Response = N401Response
+type Logout401JSONResponse struct{ N401JSONResponse }
 
-func (response Logout401Response) VisitLogoutResponse(w http.ResponseWriter) error {
+func (response Logout401JSONResponse) VisitLogoutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type Logout403JSONResponse struct{ N403JSONResponse }
+
+func (response Logout403JSONResponse) VisitLogoutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type Logout500JSONResponse struct{ N500JSONResponse }
@@ -1147,11 +1395,22 @@ func (response DeletePermission400JSONResponse) VisitDeletePermissionResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeletePermission401Response = N401Response
+type DeletePermission401JSONResponse struct{ N401JSONResponse }
 
-func (response DeletePermission401Response) VisitDeletePermissionResponse(w http.ResponseWriter) error {
+func (response DeletePermission401JSONResponse) VisitDeletePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePermission403JSONResponse struct{ N403JSONResponse }
+
+func (response DeletePermission403JSONResponse) VisitDeletePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type DeletePermission404JSONResponse struct{ N404JSONResponse }
@@ -1208,11 +1467,22 @@ func (response ReadPermission400JSONResponse) VisitReadPermissionResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPermission401Response = N401Response
+type ReadPermission401JSONResponse struct{ N401JSONResponse }
 
-func (response ReadPermission401Response) VisitReadPermissionResponse(w http.ResponseWriter) error {
+func (response ReadPermission401JSONResponse) VisitReadPermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPermission403JSONResponse struct{ N403JSONResponse }
+
+func (response ReadPermission403JSONResponse) VisitReadPermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ReadPermission404JSONResponse struct{ N404JSONResponse }
@@ -1269,11 +1539,22 @@ func (response UpdatePermission400JSONResponse) VisitUpdatePermissionResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type UpdatePermission401Response = N401Response
+type UpdatePermission401JSONResponse struct{ N401JSONResponse }
 
-func (response UpdatePermission401Response) VisitUpdatePermissionResponse(w http.ResponseWriter) error {
+func (response UpdatePermission401JSONResponse) VisitUpdatePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdatePermission403JSONResponse struct{ N403JSONResponse }
+
+func (response UpdatePermission403JSONResponse) VisitUpdatePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type UpdatePermission404JSONResponse struct{ N404JSONResponse }
@@ -1365,11 +1646,22 @@ func (response ListPermission400JSONResponse) VisitListPermissionResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListPermission401Response = N401Response
+type ListPermission401JSONResponse struct{ N401JSONResponse }
 
-func (response ListPermission401Response) VisitListPermissionResponse(w http.ResponseWriter) error {
+func (response ListPermission401JSONResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListPermission403JSONResponse struct{ N403JSONResponse }
+
+func (response ListPermission403JSONResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListPermission404JSONResponse struct{ N404JSONResponse }
@@ -1425,11 +1717,22 @@ func (response CreatePermission400JSONResponse) VisitCreatePermissionResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type CreatePermission401Response = N401Response
+type CreatePermission401JSONResponse struct{ N401JSONResponse }
 
-func (response CreatePermission401Response) VisitCreatePermissionResponse(w http.ResponseWriter) error {
+func (response CreatePermission401JSONResponse) VisitCreatePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreatePermission403JSONResponse struct{ N403JSONResponse }
+
+func (response CreatePermission403JSONResponse) VisitCreatePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type CreatePermission409JSONResponse struct{ N409JSONResponse }
@@ -1444,6 +1747,147 @@ func (response CreatePermission409JSONResponse) VisitCreatePermissionResponse(w 
 type CreatePermission500JSONResponse struct{ N500JSONResponse }
 
 func (response CreatePermission500JSONResponse) VisitCreatePermissionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalTokenRequestObject struct {
+	Id uint64 `json:"id"`
+}
+
+type DeletePersonalTokenResponseObject interface {
+	VisitDeletePersonalTokenResponse(w http.ResponseWriter) error
+}
+
+type DeletePersonalToken204Response struct {
+}
+
+func (response DeletePersonalToken204Response) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeletePersonalToken400JSONResponse struct{ N400JSONResponse }
+
+func (response DeletePersonalToken400JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalToken401JSONResponse struct{ N401JSONResponse }
+
+func (response DeletePersonalToken401JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalToken403JSONResponse struct{ N403JSONResponse }
+
+func (response DeletePersonalToken403JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalToken404JSONResponse struct{ N404JSONResponse }
+
+func (response DeletePersonalToken404JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalToken409JSONResponse struct{ N409JSONResponse }
+
+func (response DeletePersonalToken409JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeletePersonalToken500JSONResponse struct{ N500JSONResponse }
+
+func (response DeletePersonalToken500JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalTokenRequestObject struct {
+	Id uint64 `json:"id"`
+}
+
+type ReadPersonalTokenResponseObject interface {
+	VisitReadPersonalTokenResponse(w http.ResponseWriter) error
+}
+
+type ReadPersonalToken200JSONResponse PersonalTokenRead
+
+func (response ReadPersonalToken200JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken400JSONResponse struct{ N400JSONResponse }
+
+func (response ReadPersonalToken400JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken401JSONResponse struct{ N401JSONResponse }
+
+func (response ReadPersonalToken401JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken403JSONResponse struct{ N403JSONResponse }
+
+func (response ReadPersonalToken403JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken404JSONResponse struct{ N404JSONResponse }
+
+func (response ReadPersonalToken404JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken409JSONResponse struct{ N409JSONResponse }
+
+func (response ReadPersonalToken409JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadPersonalToken500JSONResponse struct{ N500JSONResponse }
+
+func (response ReadPersonalToken500JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1512,11 +1956,22 @@ func (response ListPersonalToken400JSONResponse) VisitListPersonalTokenResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListPersonalToken401Response = N401Response
+type ListPersonalToken401JSONResponse struct{ N401JSONResponse }
 
-func (response ListPersonalToken401Response) VisitListPersonalTokenResponse(w http.ResponseWriter) error {
+func (response ListPersonalToken401JSONResponse) VisitListPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListPersonalToken403JSONResponse struct{ N403JSONResponse }
+
+func (response ListPersonalToken403JSONResponse) VisitListPersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListPersonalToken404JSONResponse struct{ N404JSONResponse }
@@ -1572,11 +2027,22 @@ func (response CreatePersonalToken400JSONResponse) VisitCreatePersonalTokenRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type CreatePersonalToken401Response = N401Response
+type CreatePersonalToken401JSONResponse struct{ N401JSONResponse }
 
-func (response CreatePersonalToken401Response) VisitCreatePersonalTokenResponse(w http.ResponseWriter) error {
+func (response CreatePersonalToken401JSONResponse) VisitCreatePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreatePersonalToken403JSONResponse struct{ N403JSONResponse }
+
+func (response CreatePersonalToken403JSONResponse) VisitCreatePersonalTokenResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type CreatePersonalToken409JSONResponse struct{ N409JSONResponse }
@@ -1597,119 +2063,183 @@ func (response CreatePersonalToken500JSONResponse) VisitCreatePersonalTokenRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeletePersonalTokenRequestObject struct {
-	Id uint64 `json:"id"`
+type PingRequestObject struct {
 }
 
-type DeletePersonalTokenResponseObject interface {
-	VisitDeletePersonalTokenResponse(w http.ResponseWriter) error
+type PingResponseObject interface {
+	VisitPingResponse(w http.ResponseWriter) error
 }
 
-type DeletePersonalToken204Response struct {
+type Ping204Response struct {
 }
 
-func (response DeletePersonalToken204Response) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+func (response Ping204Response) VisitPingResponse(w http.ResponseWriter) error {
 	w.WriteHeader(204)
 	return nil
 }
 
-type DeletePersonalToken400JSONResponse struct{ N400JSONResponse }
+type Ping500JSONResponse struct{ N500JSONResponse }
 
-func (response DeletePersonalToken400JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type DeletePersonalToken401Response = N401Response
-
-func (response DeletePersonalToken401Response) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
-	w.WriteHeader(401)
-	return nil
-}
-
-type DeletePersonalToken404JSONResponse struct{ N404JSONResponse }
-
-func (response DeletePersonalToken404JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type DeletePersonalToken409JSONResponse struct{ N409JSONResponse }
-
-func (response DeletePersonalToken409JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(409)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type DeletePersonalToken500JSONResponse struct{ N500JSONResponse }
-
-func (response DeletePersonalToken500JSONResponse) VisitDeletePersonalTokenResponse(w http.ResponseWriter) error {
+func (response Ping500JSONResponse) VisitPingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPersonalTokenRequestObject struct {
-	Id uint64 `json:"id"`
+type HintPermissionsRequestObject struct {
+	Params HintPermissionsParams
 }
 
-type ReadPersonalTokenResponseObject interface {
-	VisitReadPersonalTokenResponse(w http.ResponseWriter) error
+type HintPermissionsResponseObject interface {
+	VisitHintPermissionsResponse(w http.ResponseWriter) error
 }
 
-type ReadPersonalToken200JSONResponse PersonalTokenRead
+type HintPermissions200JSONResponse []PermissionList
 
-func (response ReadPersonalToken200JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+func (response HintPermissions200JSONResponse) VisitHintPermissionsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPersonalToken400JSONResponse struct{ N400JSONResponse }
+type HintPermissions400JSONResponse struct{ N400JSONResponse }
 
-func (response ReadPersonalToken400JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+func (response HintPermissions400JSONResponse) VisitHintPermissionsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPersonalToken401Response = N401Response
+type HintPermissions401JSONResponse struct{ N401JSONResponse }
 
-func (response ReadPersonalToken401Response) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+func (response HintPermissions401JSONResponse) VisitHintPermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
-}
-
-type ReadPersonalToken404JSONResponse struct{ N404JSONResponse }
-
-func (response ReadPersonalToken404JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPersonalToken409JSONResponse struct{ N409JSONResponse }
+type HintPermissions403JSONResponse struct{ N403JSONResponse }
 
-func (response ReadPersonalToken409JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+func (response HintPermissions403JSONResponse) VisitHintPermissionsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(409)
+	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadPersonalToken500JSONResponse struct{ N500JSONResponse }
+type HintPermissions500JSONResponse struct{ N500JSONResponse }
 
-func (response ReadPersonalToken500JSONResponse) VisitReadPersonalTokenResponse(w http.ResponseWriter) error {
+func (response HintPermissions500JSONResponse) VisitHintPermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintRolesRequestObject struct {
+	Params HintRolesParams
+}
+
+type HintRolesResponseObject interface {
+	VisitHintRolesResponse(w http.ResponseWriter) error
+}
+
+type HintRoles200JSONResponse []RoleList
+
+func (response HintRoles200JSONResponse) VisitHintRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintRoles400JSONResponse struct{ N400JSONResponse }
+
+func (response HintRoles400JSONResponse) VisitHintRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintRoles401JSONResponse struct{ N401JSONResponse }
+
+func (response HintRoles401JSONResponse) VisitHintRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintRoles403JSONResponse struct{ N403JSONResponse }
+
+func (response HintRoles403JSONResponse) VisitHintRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintRoles500JSONResponse struct{ N500JSONResponse }
+
+func (response HintRoles500JSONResponse) VisitHintRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintUsersRequestObject struct {
+	Params HintUsersParams
+}
+
+type HintUsersResponseObject interface {
+	VisitHintUsersResponse(w http.ResponseWriter) error
+}
+
+type HintUsers200JSONResponse []UserList
+
+func (response HintUsers200JSONResponse) VisitHintUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintUsers400JSONResponse struct{ N400JSONResponse }
+
+func (response HintUsers400JSONResponse) VisitHintUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintUsers401JSONResponse struct{ N401JSONResponse }
+
+func (response HintUsers401JSONResponse) VisitHintUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintUsers403JSONResponse struct{ N403JSONResponse }
+
+func (response HintUsers403JSONResponse) VisitHintUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type HintUsers500JSONResponse struct{ N500JSONResponse }
+
+func (response HintUsers500JSONResponse) VisitHintUsersResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1741,11 +2271,22 @@ func (response DeleteRole400JSONResponse) VisitDeleteRoleResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteRole401Response = N401Response
+type DeleteRole401JSONResponse struct{ N401JSONResponse }
 
-func (response DeleteRole401Response) VisitDeleteRoleResponse(w http.ResponseWriter) error {
+func (response DeleteRole401JSONResponse) VisitDeleteRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteRole403JSONResponse struct{ N403JSONResponse }
+
+func (response DeleteRole403JSONResponse) VisitDeleteRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type DeleteRole404JSONResponse struct{ N404JSONResponse }
@@ -1801,11 +2342,22 @@ func (response ReadRole400JSONResponse) VisitReadRoleResponse(w http.ResponseWri
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadRole401Response = N401Response
+type ReadRole401JSONResponse struct{ N401JSONResponse }
 
-func (response ReadRole401Response) VisitReadRoleResponse(w http.ResponseWriter) error {
+func (response ReadRole401JSONResponse) VisitReadRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadRole403JSONResponse struct{ N403JSONResponse }
+
+func (response ReadRole403JSONResponse) VisitReadRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ReadRole404JSONResponse struct{ N404JSONResponse }
@@ -1862,11 +2414,22 @@ func (response UpdateRole400JSONResponse) VisitUpdateRoleResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type UpdateRole401Response = N401Response
+type UpdateRole401JSONResponse struct{ N401JSONResponse }
 
-func (response UpdateRole401Response) VisitUpdateRoleResponse(w http.ResponseWriter) error {
+func (response UpdateRole401JSONResponse) VisitUpdateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateRole403JSONResponse struct{ N403JSONResponse }
+
+func (response UpdateRole403JSONResponse) VisitUpdateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type UpdateRole404JSONResponse struct{ N404JSONResponse }
@@ -1890,153 +2453,6 @@ func (response UpdateRole409JSONResponse) VisitUpdateRoleResponse(w http.Respons
 type UpdateRole500JSONResponse struct{ N500JSONResponse }
 
 func (response UpdateRole500JSONResponse) VisitUpdateRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ListRoleRequestObject struct {
-	Params ListRoleParams
-}
-
-type ListRoleResponseObject interface {
-	VisitListRoleResponse(w http.ResponseWriter) error
-}
-
-type ListRole200JSONResponse struct {
-	// CurrentPage Page number (1-based)
-	CurrentPage int `json:"current_page"`
-
-	// Data List of items
-	Data []RoleList `json:"data"`
-
-	// FirstPageUrl URL to the first page
-	FirstPageUrl string `json:"first_page_url"`
-
-	// From Index (1-based) of the first item in the current page
-	From int `json:"from"`
-
-	// LastPage Last page number
-	LastPage int `json:"last_page"`
-
-	// LastPageUrl URL to the last page
-	LastPageUrl string `json:"last_page_url"`
-
-	// NextPageUrl URL to the next page
-	NextPageUrl string `json:"next_page_url"`
-
-	// Path Base path of the request
-	Path string `json:"path"`
-
-	// PerPage Number of items per page
-	PerPage int `json:"per_page"`
-
-	// PrevPageUrl URL to the previous page
-	PrevPageUrl string `json:"prev_page_url"`
-
-	// To Index (1-based) of the last item in the current page
-	To int `json:"to"`
-
-	// Total Total number of items
-	Total int `json:"total"`
-}
-
-func (response ListRole200JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ListRole400JSONResponse struct{ N400JSONResponse }
-
-func (response ListRole400JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ListRole401Response = N401Response
-
-func (response ListRole401Response) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.WriteHeader(401)
-	return nil
-}
-
-type ListRole404JSONResponse struct{ N404JSONResponse }
-
-func (response ListRole404JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ListRole409JSONResponse struct{ N409JSONResponse }
-
-func (response ListRole409JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(409)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type ListRole500JSONResponse struct{ N500JSONResponse }
-
-func (response ListRole500JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type CreateRoleRequestObject struct {
-	Body *CreateRoleJSONRequestBody
-}
-
-type CreateRoleResponseObject interface {
-	VisitCreateRoleResponse(w http.ResponseWriter) error
-}
-
-type CreateRole200JSONResponse RoleCreate
-
-func (response CreateRole200JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type CreateRole400JSONResponse struct{ N400JSONResponse }
-
-func (response CreateRole400JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(400)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type CreateRole401Response = N401Response
-
-func (response CreateRole401Response) VisitCreateRoleResponse(w http.ResponseWriter) error {
-	w.WriteHeader(401)
-	return nil
-}
-
-type CreateRole409JSONResponse struct{ N409JSONResponse }
-
-func (response CreateRole409JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(409)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type CreateRole500JSONResponse struct{ N500JSONResponse }
-
-func (response CreateRole500JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -2106,11 +2522,22 @@ func (response ListRolePermissions400JSONResponse) VisitListRolePermissionsRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListRolePermissions401Response = N401Response
+type ListRolePermissions401JSONResponse struct{ N401JSONResponse }
 
-func (response ListRolePermissions401Response) VisitListRolePermissionsResponse(w http.ResponseWriter) error {
+func (response ListRolePermissions401JSONResponse) VisitListRolePermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRolePermissions403JSONResponse struct{ N403JSONResponse }
+
+func (response ListRolePermissions403JSONResponse) VisitListRolePermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListRolePermissions404JSONResponse struct{ N404JSONResponse }
@@ -2134,6 +2561,59 @@ func (response ListRolePermissions409JSONResponse) VisitListRolePermissionsRespo
 type ListRolePermissions500JSONResponse struct{ N500JSONResponse }
 
 func (response ListRolePermissions500JSONResponse) VisitListRolePermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignPermissionsRequestObject struct {
+	Id   uint32 `json:"id"`
+	Body *AssignPermissionsJSONRequestBody
+}
+
+type AssignPermissionsResponseObject interface {
+	VisitAssignPermissionsResponse(w http.ResponseWriter) error
+}
+
+type AssignPermissions204Response struct {
+}
+
+func (response AssignPermissions204Response) VisitAssignPermissionsResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type AssignPermissions400JSONResponse struct{ N400JSONResponse }
+
+func (response AssignPermissions400JSONResponse) VisitAssignPermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignPermissions401JSONResponse struct{ N401JSONResponse }
+
+func (response AssignPermissions401JSONResponse) VisitAssignPermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignPermissions403JSONResponse struct{ N403JSONResponse }
+
+func (response AssignPermissions403JSONResponse) VisitAssignPermissionsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignPermissions500JSONResponse struct{ N500JSONResponse }
+
+func (response AssignPermissions500JSONResponse) VisitAssignPermissionsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -2203,11 +2683,22 @@ func (response ListRoleUsers400JSONResponse) VisitListRoleUsersResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListRoleUsers401Response = N401Response
+type ListRoleUsers401JSONResponse struct{ N401JSONResponse }
 
-func (response ListRoleUsers401Response) VisitListRoleUsersResponse(w http.ResponseWriter) error {
+func (response ListRoleUsers401JSONResponse) VisitListRoleUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRoleUsers403JSONResponse struct{ N403JSONResponse }
+
+func (response ListRoleUsers403JSONResponse) VisitListRoleUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListRoleUsers404JSONResponse struct{ N404JSONResponse }
@@ -2231,6 +2722,175 @@ func (response ListRoleUsers409JSONResponse) VisitListRoleUsersResponse(w http.R
 type ListRoleUsers500JSONResponse struct{ N500JSONResponse }
 
 func (response ListRoleUsers500JSONResponse) VisitListRoleUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRoleRequestObject struct {
+	Params ListRoleParams
+}
+
+type ListRoleResponseObject interface {
+	VisitListRoleResponse(w http.ResponseWriter) error
+}
+
+type ListRole200JSONResponse struct {
+	// CurrentPage Page number (1-based)
+	CurrentPage int `json:"current_page"`
+
+	// Data List of items
+	Data []RoleList `json:"data"`
+
+	// FirstPageUrl URL to the first page
+	FirstPageUrl string `json:"first_page_url"`
+
+	// From Index (1-based) of the first item in the current page
+	From int `json:"from"`
+
+	// LastPage Last page number
+	LastPage int `json:"last_page"`
+
+	// LastPageUrl URL to the last page
+	LastPageUrl string `json:"last_page_url"`
+
+	// NextPageUrl URL to the next page
+	NextPageUrl string `json:"next_page_url"`
+
+	// Path Base path of the request
+	Path string `json:"path"`
+
+	// PerPage Number of items per page
+	PerPage int `json:"per_page"`
+
+	// PrevPageUrl URL to the previous page
+	PrevPageUrl string `json:"prev_page_url"`
+
+	// To Index (1-based) of the last item in the current page
+	To int `json:"to"`
+
+	// Total Total number of items
+	Total int `json:"total"`
+}
+
+func (response ListRole200JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole400JSONResponse struct{ N400JSONResponse }
+
+func (response ListRole400JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole401JSONResponse struct{ N401JSONResponse }
+
+func (response ListRole401JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole403JSONResponse struct{ N403JSONResponse }
+
+func (response ListRole403JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole404JSONResponse struct{ N404JSONResponse }
+
+func (response ListRole404JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole409JSONResponse struct{ N409JSONResponse }
+
+func (response ListRole409JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListRole500JSONResponse struct{ N500JSONResponse }
+
+func (response ListRole500JSONResponse) VisitListRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRoleRequestObject struct {
+	Body *CreateRoleJSONRequestBody
+}
+
+type CreateRoleResponseObject interface {
+	VisitCreateRoleResponse(w http.ResponseWriter) error
+}
+
+type CreateRole200JSONResponse RoleCreate
+
+func (response CreateRole200JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRole400JSONResponse struct{ N400JSONResponse }
+
+func (response CreateRole400JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRole401JSONResponse struct{ N401JSONResponse }
+
+func (response CreateRole401JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRole403JSONResponse struct{ N403JSONResponse }
+
+func (response CreateRole403JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRole409JSONResponse struct{ N409JSONResponse }
+
+func (response CreateRole409JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateRole500JSONResponse struct{ N500JSONResponse }
+
+func (response CreateRole500JSONResponse) VisitCreateRoleResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -2263,11 +2923,22 @@ func (response DeleteUser400JSONResponse) VisitDeleteUserResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type DeleteUser401Response = N401Response
+type DeleteUser401JSONResponse struct{ N401JSONResponse }
 
-func (response DeleteUser401Response) VisitDeleteUserResponse(w http.ResponseWriter) error {
+func (response DeleteUser401JSONResponse) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUser403JSONResponse struct{ N403JSONResponse }
+
+func (response DeleteUser403JSONResponse) VisitDeleteUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type DeleteUser404JSONResponse struct{ N404JSONResponse }
@@ -2324,11 +2995,22 @@ func (response ReadUser400JSONResponse) VisitReadUserResponse(w http.ResponseWri
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ReadUser401Response = N401Response
+type ReadUser401JSONResponse struct{ N401JSONResponse }
 
-func (response ReadUser401Response) VisitReadUserResponse(w http.ResponseWriter) error {
+func (response ReadUser401JSONResponse) VisitReadUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ReadUser403JSONResponse struct{ N403JSONResponse }
+
+func (response ReadUser403JSONResponse) VisitReadUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ReadUser404JSONResponse struct{ N404JSONResponse }
@@ -2385,11 +3067,22 @@ func (response UpdateUser400JSONResponse) VisitUpdateUserResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type UpdateUser401Response = N401Response
+type UpdateUser401JSONResponse struct{ N401JSONResponse }
 
-func (response UpdateUser401Response) VisitUpdateUserResponse(w http.ResponseWriter) error {
+func (response UpdateUser401JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type UpdateUser403JSONResponse struct{ N403JSONResponse }
+
+func (response UpdateUser403JSONResponse) VisitUpdateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type UpdateUser404JSONResponse struct{ N404JSONResponse }
@@ -2444,11 +3137,22 @@ func (response RestoreUser400JSONResponse) VisitRestoreUserResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type RestoreUser401Response = N401Response
+type RestoreUser401JSONResponse struct{ N401JSONResponse }
 
-func (response RestoreUser401Response) VisitRestoreUserResponse(w http.ResponseWriter) error {
+func (response RestoreUser401JSONResponse) VisitRestoreUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type RestoreUser403JSONResponse struct{ N403JSONResponse }
+
+func (response RestoreUser403JSONResponse) VisitRestoreUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type RestoreUser404JSONResponse struct{ N404JSONResponse }
@@ -2541,11 +3245,22 @@ func (response ListUserRoles400JSONResponse) VisitListUserRolesResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListUserRoles401Response = N401Response
+type ListUserRoles401JSONResponse struct{ N401JSONResponse }
 
-func (response ListUserRoles401Response) VisitListUserRolesResponse(w http.ResponseWriter) error {
+func (response ListUserRoles401JSONResponse) VisitListUserRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListUserRoles403JSONResponse struct{ N403JSONResponse }
+
+func (response ListUserRoles403JSONResponse) VisitListUserRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListUserRoles404JSONResponse struct{ N404JSONResponse }
@@ -2569,6 +3284,59 @@ func (response ListUserRoles409JSONResponse) VisitListUserRolesResponse(w http.R
 type ListUserRoles500JSONResponse struct{ N500JSONResponse }
 
 func (response ListUserRoles500JSONResponse) VisitListUserRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignRolesRequestObject struct {
+	Id   uint64 `json:"id"`
+	Body *AssignRolesJSONRequestBody
+}
+
+type AssignRolesResponseObject interface {
+	VisitAssignRolesResponse(w http.ResponseWriter) error
+}
+
+type AssignRoles204Response struct {
+}
+
+func (response AssignRoles204Response) VisitAssignRolesResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type AssignRoles400JSONResponse struct{ N400JSONResponse }
+
+func (response AssignRoles400JSONResponse) VisitAssignRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignRoles401JSONResponse struct{ N401JSONResponse }
+
+func (response AssignRoles401JSONResponse) VisitAssignRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignRoles403JSONResponse struct{ N403JSONResponse }
+
+func (response AssignRoles403JSONResponse) VisitAssignRolesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type AssignRoles500JSONResponse struct{ N500JSONResponse }
+
+func (response AssignRoles500JSONResponse) VisitAssignRolesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -2637,11 +3405,22 @@ func (response ListUser400JSONResponse) VisitListUserResponse(w http.ResponseWri
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ListUser401Response = N401Response
+type ListUser401JSONResponse struct{ N401JSONResponse }
 
-func (response ListUser401Response) VisitListUserResponse(w http.ResponseWriter) error {
+func (response ListUser401JSONResponse) VisitListUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ListUser403JSONResponse struct{ N403JSONResponse }
+
+func (response ListUser403JSONResponse) VisitListUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type ListUser404JSONResponse struct{ N404JSONResponse }
@@ -2697,11 +3476,22 @@ func (response CreateUser400JSONResponse) VisitCreateUserResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type CreateUser401Response = N401Response
+type CreateUser401JSONResponse struct{ N401JSONResponse }
 
-func (response CreateUser401Response) VisitCreateUserResponse(w http.ResponseWriter) error {
+func (response CreateUser401JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CreateUser403JSONResponse struct{ N403JSONResponse }
+
+func (response CreateUser403JSONResponse) VisitCreateUserResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 type CreateUser409JSONResponse struct{ N409JSONResponse }
@@ -2731,7 +3521,7 @@ type StrictServerInterface interface {
 	// (GET /access-token)
 	CheckAccessToken(ctx context.Context, request CheckAccessTokenRequestObject) (CheckAccessTokenResponseObject, error)
 	// Refresh current access token
-	// (PATCH /access-token)
+	// (POST /access-token/refresh)
 	RefreshAccessToken(ctx context.Context, request RefreshAccessTokenRequestObject) (RefreshAccessTokenResponseObject, error)
 	// Login
 	// (POST /login)
@@ -2754,18 +3544,30 @@ type StrictServerInterface interface {
 	// Create a new Permission
 	// (POST /permissions)
 	CreatePermission(ctx context.Context, request CreatePermissionRequestObject) (CreatePermissionResponseObject, error)
+	// Deletes a PersonalToken by ID
+	// (DELETE /personal-token/{id})
+	DeletePersonalToken(ctx context.Context, request DeletePersonalTokenRequestObject) (DeletePersonalTokenResponseObject, error)
+	// Find a PersonalToken by ID
+	// (GET /personal-token/{id})
+	ReadPersonalToken(ctx context.Context, request ReadPersonalTokenRequestObject) (ReadPersonalTokenResponseObject, error)
 	// List PersonalTokens
 	// (GET /personal-tokens)
 	ListPersonalToken(ctx context.Context, request ListPersonalTokenRequestObject) (ListPersonalTokenResponseObject, error)
 	// Create a new PersonalToken
 	// (POST /personal-tokens)
 	CreatePersonalToken(ctx context.Context, request CreatePersonalTokenRequestObject) (CreatePersonalTokenResponseObject, error)
-	// Deletes a PersonalToken by ID
-	// (DELETE /personal-tokens/{id})
-	DeletePersonalToken(ctx context.Context, request DeletePersonalTokenRequestObject) (DeletePersonalTokenResponseObject, error)
-	// Find a PersonalToken by ID
-	// (GET /personal-tokens/{id})
-	ReadPersonalToken(ctx context.Context, request ReadPersonalTokenRequestObject) (ReadPersonalTokenResponseObject, error)
+	// Ping
+	// (GET /ping)
+	Ping(ctx context.Context, request PingRequestObject) (PingResponseObject, error)
+	// quick search permissions
+	// (GET /q/permissions)
+	HintPermissions(ctx context.Context, request HintPermissionsRequestObject) (HintPermissionsResponseObject, error)
+	// quick search roles
+	// (GET /q/roles)
+	HintRoles(ctx context.Context, request HintRolesRequestObject) (HintRolesResponseObject, error)
+	// quick search users
+	// (GET /q/users)
+	HintUsers(ctx context.Context, request HintUsersRequestObject) (HintUsersResponseObject, error)
 	// Deletes a Role by ID
 	// (DELETE /role/{id})
 	DeleteRole(ctx context.Context, request DeleteRoleRequestObject) (DeleteRoleResponseObject, error)
@@ -2775,18 +3577,21 @@ type StrictServerInterface interface {
 	// Updates a Role
 	// (PATCH /role/{id})
 	UpdateRole(ctx context.Context, request UpdateRoleRequestObject) (UpdateRoleResponseObject, error)
+	// List attached Permissions
+	// (GET /role/{id}/permissions)
+	ListRolePermissions(ctx context.Context, request ListRolePermissionsRequestObject) (ListRolePermissionsResponseObject, error)
+	// Assign permissions to role
+	// (POST /role/{id}/permissions)
+	AssignPermissions(ctx context.Context, request AssignPermissionsRequestObject) (AssignPermissionsResponseObject, error)
+	// List attached Users
+	// (GET /role/{id}/users)
+	ListRoleUsers(ctx context.Context, request ListRoleUsersRequestObject) (ListRoleUsersResponseObject, error)
 	// List Roles
 	// (GET /roles)
 	ListRole(ctx context.Context, request ListRoleRequestObject) (ListRoleResponseObject, error)
 	// Create a new Role
 	// (POST /roles)
 	CreateRole(ctx context.Context, request CreateRoleRequestObject) (CreateRoleResponseObject, error)
-	// List attached Permissions
-	// (GET /roles/{id}/permissions)
-	ListRolePermissions(ctx context.Context, request ListRolePermissionsRequestObject) (ListRolePermissionsResponseObject, error)
-	// List attached Users
-	// (GET /roles/{id}/users)
-	ListRoleUsers(ctx context.Context, request ListRoleUsersRequestObject) (ListRoleUsersResponseObject, error)
 	// Deletes a User by ID
 	// (DELETE /user/{id})
 	DeleteUser(ctx context.Context, request DeleteUserRequestObject) (DeleteUserResponseObject, error)
@@ -2802,6 +3607,9 @@ type StrictServerInterface interface {
 	// List attached Roles
 	// (GET /user/{id}/roles)
 	ListUserRoles(ctx context.Context, request ListUserRolesRequestObject) (ListUserRolesResponseObject, error)
+	// Assign roles to user
+	// (POST /user/{id}/roles)
+	AssignRoles(ctx context.Context, request AssignRolesRequestObject) (AssignRolesResponseObject, error)
 	// List Users
 	// (GET /users)
 	ListUser(ctx context.Context, request ListUserRequestObject) (ListUserResponseObject, error)
@@ -3105,6 +3913,60 @@ func (sh *strictHandler) CreatePermission(ctx *gin.Context) {
 	}
 }
 
+// DeletePersonalToken operation middleware
+func (sh *strictHandler) DeletePersonalToken(ctx *gin.Context, id uint64) {
+	var request DeletePersonalTokenRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeletePersonalToken(ctx, request.(DeletePersonalTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeletePersonalToken")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(DeletePersonalTokenResponseObject); ok {
+		if err := validResponse.VisitDeletePersonalTokenResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReadPersonalToken operation middleware
+func (sh *strictHandler) ReadPersonalToken(ctx *gin.Context, id uint64) {
+	var request ReadPersonalTokenRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ReadPersonalToken(ctx, request.(ReadPersonalTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReadPersonalToken")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ReadPersonalTokenResponseObject); ok {
+		if err := validResponse.VisitReadPersonalTokenResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListPersonalToken operation middleware
 func (sh *strictHandler) ListPersonalToken(ctx *gin.Context, params ListPersonalTokenParams) {
 	var request ListPersonalTokenRequestObject
@@ -3165,17 +4027,15 @@ func (sh *strictHandler) CreatePersonalToken(ctx *gin.Context) {
 	}
 }
 
-// DeletePersonalToken operation middleware
-func (sh *strictHandler) DeletePersonalToken(ctx *gin.Context, id uint64) {
-	var request DeletePersonalTokenRequestObject
-
-	request.Id = id
+// Ping operation middleware
+func (sh *strictHandler) Ping(ctx *gin.Context) {
+	var request PingRequestObject
 
 	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.DeletePersonalToken(ctx, request.(DeletePersonalTokenRequestObject))
+		return sh.ssi.Ping(ctx, request.(PingRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeletePersonalToken")
+		handler = middleware(handler, "Ping")
 	}
 
 	response, err := handler(ctx, request)
@@ -3183,8 +4043,8 @@ func (sh *strictHandler) DeletePersonalToken(ctx *gin.Context, id uint64) {
 	if err != nil {
 		ctx.Error(err)
 		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(DeletePersonalTokenResponseObject); ok {
-		if err := validResponse.VisitDeletePersonalTokenResponse(ctx.Writer); err != nil {
+	} else if validResponse, ok := response.(PingResponseObject); ok {
+		if err := validResponse.VisitPingResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -3192,17 +4052,17 @@ func (sh *strictHandler) DeletePersonalToken(ctx *gin.Context, id uint64) {
 	}
 }
 
-// ReadPersonalToken operation middleware
-func (sh *strictHandler) ReadPersonalToken(ctx *gin.Context, id uint64) {
-	var request ReadPersonalTokenRequestObject
+// HintPermissions operation middleware
+func (sh *strictHandler) HintPermissions(ctx *gin.Context, params HintPermissionsParams) {
+	var request HintPermissionsRequestObject
 
-	request.Id = id
+	request.Params = params
 
 	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.ReadPersonalToken(ctx, request.(ReadPersonalTokenRequestObject))
+		return sh.ssi.HintPermissions(ctx, request.(HintPermissionsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ReadPersonalToken")
+		handler = middleware(handler, "HintPermissions")
 	}
 
 	response, err := handler(ctx, request)
@@ -3210,8 +4070,62 @@ func (sh *strictHandler) ReadPersonalToken(ctx *gin.Context, id uint64) {
 	if err != nil {
 		ctx.Error(err)
 		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(ReadPersonalTokenResponseObject); ok {
-		if err := validResponse.VisitReadPersonalTokenResponse(ctx.Writer); err != nil {
+	} else if validResponse, ok := response.(HintPermissionsResponseObject); ok {
+		if err := validResponse.VisitHintPermissionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// HintRoles operation middleware
+func (sh *strictHandler) HintRoles(ctx *gin.Context, params HintRolesParams) {
+	var request HintRolesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.HintRoles(ctx, request.(HintRolesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "HintRoles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(HintRolesResponseObject); ok {
+		if err := validResponse.VisitHintRolesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// HintUsers operation middleware
+func (sh *strictHandler) HintUsers(ctx *gin.Context, params HintUsersParams) {
+	var request HintUsersRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.HintUsers(ctx, request.(HintUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "HintUsers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(HintUsersResponseObject); ok {
+		if err := validResponse.VisitHintUsersResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -3308,6 +4222,97 @@ func (sh *strictHandler) UpdateRole(ctx *gin.Context, id uint32) {
 	}
 }
 
+// ListRolePermissions operation middleware
+func (sh *strictHandler) ListRolePermissions(ctx *gin.Context, id uint32, params ListRolePermissionsParams) {
+	var request ListRolePermissionsRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRolePermissions(ctx, request.(ListRolePermissionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRolePermissions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListRolePermissionsResponseObject); ok {
+		if err := validResponse.VisitListRolePermissionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AssignPermissions operation middleware
+func (sh *strictHandler) AssignPermissions(ctx *gin.Context, id uint32) {
+	var request AssignPermissionsRequestObject
+
+	request.Id = id
+
+	var body AssignPermissionsJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AssignPermissions(ctx, request.(AssignPermissionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AssignPermissions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(AssignPermissionsResponseObject); ok {
+		if err := validResponse.VisitAssignPermissionsResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListRoleUsers operation middleware
+func (sh *strictHandler) ListRoleUsers(ctx *gin.Context, id uint32, params ListRoleUsersParams) {
+	var request ListRoleUsersRequestObject
+
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRoleUsers(ctx, request.(ListRoleUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRoleUsers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(ListRoleUsersResponseObject); ok {
+		if err := validResponse.VisitListRoleUsersResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListRole operation middleware
 func (sh *strictHandler) ListRole(ctx *gin.Context, params ListRoleParams) {
 	var request ListRoleRequestObject
@@ -3361,62 +4366,6 @@ func (sh *strictHandler) CreateRole(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(CreateRoleResponseObject); ok {
 		if err := validResponse.VisitCreateRoleResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// ListRolePermissions operation middleware
-func (sh *strictHandler) ListRolePermissions(ctx *gin.Context, id uint32, params ListRolePermissionsParams) {
-	var request ListRolePermissionsRequestObject
-
-	request.Id = id
-	request.Params = params
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.ListRolePermissions(ctx, request.(ListRolePermissionsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ListRolePermissions")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(ListRolePermissionsResponseObject); ok {
-		if err := validResponse.VisitListRolePermissionsResponse(ctx.Writer); err != nil {
-			ctx.Error(err)
-		}
-	} else if response != nil {
-		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// ListRoleUsers operation middleware
-func (sh *strictHandler) ListRoleUsers(ctx *gin.Context, id uint32, params ListRoleUsersParams) {
-	var request ListRoleUsersRequestObject
-
-	request.Id = id
-	request.Params = params
-
-	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
-		return sh.ssi.ListRoleUsers(ctx, request.(ListRoleUsersRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ListRoleUsers")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		ctx.Error(err)
-		ctx.Status(http.StatusInternalServerError)
-	} else if validResponse, ok := response.(ListRoleUsersResponseObject); ok {
-		if err := validResponse.VisitListRoleUsersResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
@@ -3570,6 +4519,41 @@ func (sh *strictHandler) ListUserRoles(ctx *gin.Context, id uint64, params ListU
 	}
 }
 
+// AssignRoles operation middleware
+func (sh *strictHandler) AssignRoles(ctx *gin.Context, id uint64) {
+	var request AssignRolesRequestObject
+
+	request.Id = id
+
+	var body AssignRolesJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		ctx.Error(err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.AssignRoles(ctx, request.(AssignRolesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AssignRoles")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(AssignRolesResponseObject); ok {
+		if err := validResponse.VisitAssignRolesResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListUser operation middleware
 func (sh *strictHandler) ListUser(ctx *gin.Context, params ListUserParams) {
 	var request ListUserRequestObject
@@ -3633,51 +4617,56 @@ func (sh *strictHandler) CreateUser(ctx *gin.Context) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xdW2/cONL9K4S+D9hdQLGd2wLjNyfGAgGMQeAZ7z4MAoOWqrs5UZMakvJlg/7vC5JS",
-	"i5KoW1/c3RGf4tgUSR1W1TliFaUfQcSWKaNApQgufwQcRMqoAP2fDxcX6p+IUQlUqh9xmiYkwpIwev6n",
-	"YFT9TkQLWGL1U8pZClwSc3XEYlD/ypcUgsuAUAlz4MEqDIBzxlWbVRgIiWUmrHZCckLnwWoVBhz+ygiH",
-	"OLj8w/S2bv4tLJqzhz8hksFKtY9BRJykanZ6wEeckBgRmmYyRDGWGOW/U5P4cPFWjVq95o7iTC4YJ/+F",
-	"vNGHE0aAg2AZjwBRJtGMZTS/p19O+J4iRmcJiSShc1Tcn1DDfzxpY80oPKcQSYiRHlB3aSarx7uKIhDi",
-	"d/YdqGPyHLCE+B7r254xvlQ/BTGW8EaSpZpKbb5hQOJK24xQ+c8PQRgsCSXLbBlcvg0dYLAnClxd+P8c",
-	"ZsFl8H/nZfg4z6d7fidM40wAv99knBqaJA7KzppghsFX4EsiBGE7wqayND8GYff+XS92FC/B2R1niZkr",
-	"kbAUfejesgTUVXk3mHP8otFO45E36oJZT7Ib488a0ZNE+tUwuiFCeoS6ELoFHHuEuhC60wN5jJwYCUZx",
-	"skM6rAHk4Cv8bJB49/GjE5fTp9YqCr3A75EHDgD/MSC6N9aYKJ5745jp4KnV5ilSULrm0eHS2nqO2InA",
-	"NkAPH7+I7tWRR1GjWi8v0LvQ8dK8HRsvytux8XK8C537MnYK72EdOKkYv0OEYIlJUmlufrM73bEh6xUg",
-	"L/HzDdC5XJTSaP3/QXCuO3NBqhmzASTWm6X3UmnA4exrb7E66P8oVyfN5e7Ye60+QTvulsOMg1jsGMND",
-	"7XS+tknuUoF5D+c+XO4QzF1qvATKa6r5rGssAWEaI3UxeloARXIBiEPEeIyesED51UHoHo1mSYIf1MOn",
-	"5Bn4pXQt5S4lqYeT3yvC8erViZBqS+iMNT39CgmyTBNAOJMLoDLPuCMB/JFEgNgMLV4eOInR1aerzzom",
-	"3H66+qxmQ6Ty7+C3ruuDMHgEbnK7wcXZxdlbvVmeAsUpCS6D92cXZ++DMEixXOiVOjfq740skgMm0DQn",
-	"fguP7DugKOMcqETmMqQv07PMJZD5TaDH5HpqX+L11bbeCavFM+9M6Uh1zN8yfcEsS5IXxHUXcWVkU6Bx",
-	"0SaN1iOcq0ZlFUtf27dWhUR3W9VI1x5kyyXmL904qUXEc6GMx0bi2yoM5qDNsAra5wVE37fCTJfvKDM/",
-	"dtT+nU90LG4pltHCZazGGJ3WmglTDdNtr/qvWxqs7uMUTLYdrVbsV2FwnrA5MRlFJhyq5qoMUYAwUoyS",
-	"hwqZcYpwC/Y3ulcTbEHITyx+2aJUKcVCPDEeu0nAYszuaL9uGZY9uuN+eZWSYquG2Yyru+rbANf61FEh",
-	"VbFEiyuKQr2jMkCz4oVJsUy229QXWsQ0rZDVsvxN1C22YU+qy9H+m7D5HGKkrn01GPRgCocyIXP+g8Sr",
-	"Lma+1r8XGo9yXxE9EbnInyK0H0GMvlyfNdAxV1u5HGXgHC9B6lzMH40FuFYapTpWoNROcKlVRSGKLo1A",
-	"qnpDaFn2OCW3+jZk/eq3b9965TFqjz6QF8H2tf1gFZf2tf1lC6MqrAPbtvHwgr5cW6HdWkpLjVSx/Reh",
-	"8TAjs4K8QESeOdgVx8dvcWGj3DnngGI6KvgUE/krA/5SzsSii3L8cc9k3/bIHLXCMgd/9HqSVSA9CT9S",
-	"5j/KiVqkqdmFqPmjcphUPbcJKVC0wHSu4jlDQjKO59D0INPLiUTtzWQcjmOi/oSTr5agm+FEQFjTeH1b",
-	"ByNqicfuLzSKD3pr161lL+9CLbbZkQheU0E2yie755vvmUzI613e2ubyVdmm18pJpDdESKs70fRu1WK4",
-	"bz8tsEQpnoMyIg40bmUl1ajKSKP4TzkJilhGZTmSClso79c5JPD75rB95V8dk/jVIuC0Ectqox+Ygmub",
-	"oubx2sDRlK5qAWm2fACO/v72zQMWEP+jN/zEWOIWC2MzZKJaOLacS+/pOjKJM8KFmf59xhMHtd3eKMNQ",
-	"K6ObFnbRCLszzpauR7sYnst7LxbZdKVtj5i0SLFPkXe/RujChVCCRRvkNzifY457L9rrvnrvP8Edt0/h",
-	"eWA3qmVrN5q3G1d/wgKQ+lOBX86/zh4K52z08qsxxMKGbC/vSbFzeBx2b6olYZlovT/JBtuIhntjE5FM",
-	"Ysdcf1e/LlzS8qauzuon22yXLwYK7aBYmmfuFvq+G75Wt726EdWBDwtVpwPEkCN1X/GcUL1VnOTRw+ay",
-	"6TB+nZ07BL5zg8oUMyjFQOGpVeMT2SnvTScVCTAxGW17UUeSrVWqSoZMEvJAejqvaemeZJ4m3a937d1j",
-	"zK02DL5HJuuCqjdlwVSnVC6rr9rVslWhNWXBPDXNWjsP5GWrl61etk5ZthIhMjBSS4WGSm5wikLW4s4q",
-	"JVuEOULOlldtpmgrNP0KovbQ5xfXB5UPdYRx6OlFp1K1Vvtgirpxhrp3qj+nrq54TpsfO9T12AICC8ix",
-	"NQTDNXglIVW5bMucVL97DK0kqOPgiwmqxQQWPo5UaI1d+ksK+sxuaFXBidrgnkJmR36/176nm+IfYdoq",
-	"4HKWwKgoe8sSGBdc9emuwfactz6OoqzyZn0EtSKohqVuXXrhBsTLdgMaFCZPxZp2FxTX5/UdsbDDQCca",
-	"Artts7eySV++YU3TEZvm8SZg2l7fsl0axvVClrFPsePro7TxHLwyynqHRdscp1wNlftdLTQUWqgnoaMP",
-	"DrrzOEO8f7r1TtyKdr7SaeOs0fq9Rj5Z5JNFPlk05WQRlhJHC4iRoa2JZYc0ETsV/oBcUFPkD0oB5Qzv",
-	"1fRO1PRGZVJ65Q6TzrFeuNg2sZ8wedOjlvXW4fCjA+uY1XuGQA1ULWU8ssfqcIfa/hX1/LSLrpwvMPRS",
-	"2ktpL6W9lM6l9JQPD7j4uZf919pwAO/rl6K2M77+s+d6z/W74vryJbye5T3Le5b3LF+wvGGtqfJ7QbQO",
-	"ZlfAjKoIUn2Nqwi6M2+fGcjyd9a7avZZ2NYg4v8sQC6AKwcnNEqyGJDkWL8Wb81EDi7O27io+IGxBDAd",
-	"Wn5UIuvLj6zyIw1LvcRDW8mA8qN2ax1UfuRNd6+1Tl3vBezwhonWOnU7Qm+t013xVssNap2O0w9ep9ap",
-	"/asT2yVFRr2bu+uDENtOo+ObEFt3vePz9tu9OrxXRWoXOXhFl/UK+LY5TrmiK48utQBY0bKqJ8k4tL+d",
-	"9dY0QLj4dIFcYKnJpXiwS16QYDNpfc+gLg90D0ccGXvL3fOPNjg5NkdwSiZW2kQhnoxtBHXj6i8cXD95",
-	"dVQQavGT1zUcu8D0O6DHvwNa+9SF3wH1O6B+B9TvgEJsvmcwybrBKg+3q8YeOu/IYw7Rf9M9B9Dx4nF/",
-	"DmActXtS96TuSd2Tuk3qk+PzeiKz3P0ecA6guQE+6BxAzvB+p9nvNG/0kcqO71O27O4e5sSD9YHjton9",
-	"hCceWnaTV6v/BQAA//8ck1V9QpUAAA==",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

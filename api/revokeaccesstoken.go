@@ -7,8 +7,8 @@ func (s Server) RevokeAccessToken(
 ) (RevokeAccessTokenResponseObject, error) {
 	err := s.revokeAccessToken(ctx)
 	if err != nil {
-		log.Debugf("failed to revoke access token: %v", err)
-		return RefreshAccessToken401Response{}, nil
+		Log.Debugf("failed to revoke access token: %v", err)
+		return RevokeAccessToken401JSONResponse{}, nil
 	}
 	return RevokeAccessToken204Response{}, nil
 }

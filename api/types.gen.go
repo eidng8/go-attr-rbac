@@ -230,6 +230,20 @@ type N400 struct {
 	Status string       `json:"status"`
 }
 
+// N401 defines model for 401.
+type N401 struct {
+	Code   int          `json:"code"`
+	Errors *interface{} `json:"errors,omitempty"`
+	Status string       `json:"status"`
+}
+
+// N403 defines model for 403.
+type N403 struct {
+	Code   int          `json:"code"`
+	Errors *interface{} `json:"errors,omitempty"`
+	Status string       `json:"status"`
+}
+
 // N404 defines model for 404.
 type N404 struct {
 	Code   int          `json:"code"`
@@ -306,12 +320,51 @@ type CreatePersonalTokenJSONBody struct {
 	UserId      uint64     `json:"user_id"`
 }
 
+// HintPermissionsParams defines parameters for HintPermissions.
+type HintPermissionsParams struct {
+	// Q text to search
+	Q string `form:"q" json:"q"`
+}
+
+// HintRolesParams defines parameters for HintRoles.
+type HintRolesParams struct {
+	// Q text to search
+	Q string `form:"q" json:"q"`
+}
+
+// HintUsersParams defines parameters for HintUsers.
+type HintUsersParams struct {
+	// Q text to search
+	Q string `form:"q" json:"q"`
+}
+
 // UpdateRoleJSONBody defines parameters for UpdateRole.
 type UpdateRoleJSONBody struct {
 	Description *string   `json:"description,omitempty"`
 	Name        *string   `json:"name,omitempty"`
 	Permissions *[]uint32 `json:"permissions,omitempty"`
 	Users       *[]uint64 `json:"users,omitempty"`
+}
+
+// ListRolePermissionsParams defines parameters for ListRolePermissions.
+type ListRolePermissionsParams struct {
+	// Page what page to render
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage item count to render per page
+	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// AssignPermissionsJSONBody defines parameters for AssignPermissions.
+type AssignPermissionsJSONBody = []uint32
+
+// ListRoleUsersParams defines parameters for ListRoleUsers.
+type ListRoleUsersParams struct {
+	// Page what page to render
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage item count to render per page
+	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
 // ListRoleParams defines parameters for ListRole.
@@ -332,24 +385,6 @@ type CreateRoleJSONBody struct {
 	Name        string    `json:"name"`
 	Permissions *[]uint32 `json:"permissions,omitempty"`
 	Users       *[]uint64 `json:"users,omitempty"`
-}
-
-// ListRolePermissionsParams defines parameters for ListRolePermissions.
-type ListRolePermissionsParams struct {
-	// Page what page to render
-	Page *int `form:"page,omitempty" json:"page,omitempty"`
-
-	// PerPage item count to render per page
-	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
-}
-
-// ListRoleUsersParams defines parameters for ListRoleUsers.
-type ListRoleUsersParams struct {
-	// Page what page to render
-	Page *int `form:"page,omitempty" json:"page,omitempty"`
-
-	// PerPage item count to render per page
-	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
 // DeleteUserParams defines parameters for DeleteUser.
@@ -382,6 +417,9 @@ type ListUserRolesParams struct {
 	// PerPage item count to render per page
 	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
+
+// AssignRolesJSONBody defines parameters for AssignRoles.
+type AssignRolesJSONBody = []uint32
 
 // ListUserParams defines parameters for ListUser.
 type ListUserParams struct {
@@ -420,11 +458,17 @@ type CreatePersonalTokenJSONRequestBody CreatePersonalTokenJSONBody
 // UpdateRoleJSONRequestBody defines body for UpdateRole for application/json ContentType.
 type UpdateRoleJSONRequestBody UpdateRoleJSONBody
 
+// AssignPermissionsJSONRequestBody defines body for AssignPermissions for application/json ContentType.
+type AssignPermissionsJSONRequestBody = AssignPermissionsJSONBody
+
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody CreateRoleJSONBody
 
 // UpdateUserJSONRequestBody defines body for UpdateUser for application/json ContentType.
 type UpdateUserJSONRequestBody UpdateUserJSONBody
+
+// AssignRolesJSONRequestBody defines body for AssignRoles for application/json ContentType.
+type AssignRolesJSONRequestBody = AssignRolesJSONBody
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody CreateUserJSONBody

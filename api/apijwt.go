@@ -50,11 +50,12 @@ func (s Server) issueJwtToken(
 		jwt.SigningMethodHS256, AccessTokenClaims{
 			Roles: roles,
 			RegisteredClaims: jwt.RegisteredClaims{
+				ID:        uid.String(),
 				Audience:  []string{s.Domain()}, // TODO allow customize?
 				Issuer:    s.Domain(),           // TODO allow customize?
 				Subject:   fmt.Sprintf("%d", user.ID),
+				IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 				ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(ttl)},
-				ID:        uid.String(),
 			},
 		},
 	)
@@ -66,15 +67,9 @@ func (s Server) issueJwtToken(
 	return token, nil
 }
 
-func (s Server) jwtTokenFromString(gc *gin.Context, token string) (
-	*jwtToken, error,
-) {
-	t := jwtToken{
-		svr: &s,
-		gc:  gc,
-	}
-	err := t.parseToken(token)
-	if err != nil {
+func (s Server) jwtTokenFromString(token string) (*jwtToken, error) {
+	t := jwtToken{svr: &s}
+	if err := t.parse(token); err != nil {
 		return nil, err
 	}
 	return &t, nil
@@ -87,16 +82,16 @@ func (s Server) jwtTokenFromCookie(gc *gin.Context, name string) (
 ) {
 	cookie, err := gc.Cookie(name)
 	if err != nil {
-		log.Debugf("failed to get access token: %v", err)
+		Log.Debugf("failed to get access token: %v", err)
 		return nil, err
 	}
 	if "" == cookie {
-		log.Debugf("failed to get access token: empty cookie")
+		Log.Debugf("failed to get access token: empty cookie")
 		return nil, ErrEmptyToken
 	}
-	token, err := s.jwtTokenFromString(gc, cookie)
+	token, err := s.jwtTokenFromString(cookie)
 	if err != nil {
-		log.Debugf("parse token error: %v", err)
+		Log.Debugf("parse token error: %v", err)
 		return nil, ErrInvalidToken
 	}
 	if err = token.expired(); err != nil {
@@ -143,17 +138,17 @@ func (s Server) revokeAccessToken(ctx context.Context) error {
 	// check if the token jti was revoked
 	atid, err := at.getJtiBinary()
 	if err != nil {
-		log.Debugf("invalid acess token id %v", at)
+		Log.Debugf("invalid acess token id %v", at)
 		return ErrInvalidToken
 	}
 	rt, err := s.getRefreshToken(gc)
 	if err != nil {
-		log.Debugf("invalid refresh token: %v", err)
+		Log.Debugf("invalid refresh token: %v", err)
 		return ErrInvalidToken
 	}
 	rtid, err := rt.getJtiBinary()
 	if err != nil {
-		log.Debugf("invalid refresh token id %v", rt)
+		Log.Debugf("invalid refresh token id %v", rt)
 		return ErrInvalidToken
 	}
 	exist, err := s.db.AccessToken.Query().Where(
@@ -162,11 +157,11 @@ func (s Server) revokeAccessToken(ctx context.Context) error {
 		),
 	).Exist(context.Background())
 	if err != nil {
-		log.Debugf("token query error: %v", err)
+		Log.Debugf("token query error: %v", err)
 		return err
 	}
 	if exist {
-		log.Debugf("access token or refresh token has been revoked")
+		Log.Debugf("access token or refresh token has been revoked")
 		return ErrInvalidToken
 	}
 	// add the token to the revoked list
@@ -184,6 +179,6 @@ func (s Server) revokeAccessToken(ctx context.Context) error {
 	)
 	gc.SetSameSite(http.SameSiteStrictMode)
 	s.setCookie(gc, AccessTokenName, "", "/", -1)
-	s.setCookie(gc, RefreshTokenName, "", "/access-token", -1)
+	s.setCookie(gc, RefreshTokenName, "", RefreshTokenPath, -1)
 	return err
 }

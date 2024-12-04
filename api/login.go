@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime/types"
@@ -26,7 +24,7 @@ func (s Server) Login(
 		[]byte(u.Password), []byte(request.Body.Password),
 	)
 	if err != nil {
-		return Login401Response{}, nil
+		return Login401JSONResponse{}, nil
 	}
 	email := types.Email(u.Email)
 
@@ -45,9 +43,7 @@ func (s Server) Login(
 	if !ok {
 		return nil, ErrInvalidContext
 	}
-	gc.SetSameSite(http.SameSiteStrictMode)
-	s.setCookie(gc, AccessTokenName, at, "/", 3600)
-	s.setCookie(gc, RefreshTokenName, rt, "/access-token", 7*24*3600)
+	s.setToken(gc, at, rt)
 
 	return Login200JSONResponse{
 		Id:        u.ID,

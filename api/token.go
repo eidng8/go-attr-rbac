@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
@@ -28,7 +27,6 @@ var (
 
 type jwtToken struct {
 	svr   *Server
-	gc    *gin.Context
 	token *jwt.Token
 	user  *ent.User
 }
@@ -40,18 +38,22 @@ type AccessTokenClaims struct {
 }
 
 type PersonalTokenClaims struct {
-	AccessTokenClaims
+	jwt.RegisteredClaims
 	Scopes string `json:"scopes,omitempty"`
 }
 
 // getJti returns the token's uuid from JTI.
 // Doesn't access database. Doesn't log errors.
-func (tk jwtToken) getJti() (uuid.UUID, error) {
-	claims, ok := tk.token.Claims.(*jwt.RegisteredClaims)
+func (tk *jwtToken) getJti() (uuid.UUID, error) {
+	claims, ok := tk.token.Claims.(jwt.MapClaims)
 	if !ok {
 		return uuid.Nil, ErrInvalidToken
 	}
-	id, err := uuid.Parse(claims.ID)
+	jti, ok := claims["jti"].(string)
+	if !ok {
+		return uuid.Nil, ErrInvalidToken
+	}
+	id, err := uuid.Parse(jti)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -60,7 +62,7 @@ func (tk jwtToken) getJti() (uuid.UUID, error) {
 
 // getJtiBinary returns the token's uuid from JTI, as binary.
 // Doesn't access database. Doesn't log errors.
-func (tk jwtToken) getJtiBinary() ([]byte, error) {
+func (tk *jwtToken) getJtiBinary() ([]byte, error) {
 	id, err := tk.getJti()
 	if err != nil {
 		return nil, err
@@ -74,42 +76,42 @@ func (tk jwtToken) getJtiBinary() ([]byte, error) {
 
 // getUserBySubject checks the subject validity and retrieves the user.
 // Accesses database. Debug logs errors.
-func (tk jwtToken) getUserBySubject() error {
+func (tk *jwtToken) getUserBySubject() error {
 	subject, err := tk.token.Claims.GetSubject()
 	if err != nil {
-		log.Debugf("failed to get subject from token: %v", err)
+		Log.Debugf("failed to get subject from token: %v", err)
 		return ErrInvalidToken
 	}
 	id, err := strconv.ParseUint(subject, 10, 64)
 	if err != nil {
-		log.Debugf("invalid subject %s", subject)
+		Log.Debugf("invalid subject %s", subject)
 		return ErrInvalidToken
 	}
 	u, err := tk.svr.db.User.Query().Where(user.IDEQ(id)).
 		First(context.Background())
 	if err != nil {
-		log.Debugf("query user error: %s", err)
+		Log.Debugf("query user error: %s", err)
 		return ErrInvalidToken
 	}
 	if nil == u {
-		log.Debugf("user not found %d", id)
+		Log.Debugf("user not found %d", id)
 		return ErrInvalidToken
 	}
 	tk.user = u
 	return nil
 }
 
-// parseToken parses the token string and verify its basic validity:
+// parse parses the token string and verify its basic validity:
 // * must use HS256 algorithm;
 // * must have exp claim;
 // * must aud claim match the server domain;
 // * must iss claim match the server domain.
 // Doesn't access database. Doesn't log errors.
-func (tk jwtToken) parseToken(token string) error {
+func (tk *jwtToken) parse(token string) error {
 	t, err := jwt.Parse(
 		token, tk.svr.getSecret, jwt.WithJSONNumber(),
 		jwt.WithExpirationRequired(), jwt.WithIssuer(tk.svr.Domain()),
-		jwt.WithAudience(tk.svr.Domain()),
+		jwt.WithAudience(tk.svr.Domain()), jwt.WithIssuedAt(),
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
 	)
 	if err != nil {
@@ -124,22 +126,26 @@ func (tk jwtToken) parseToken(token string) error {
 
 // checkAccessToken checks the access token validity.
 // Accesses database. Debug logs errors.
-func (tk jwtToken) checkAccessToken() error {
-	exists, err := tk.checkToken(
+func (tk *jwtToken) checkAccessToken() error {
+	valid, err := tk.checkToken(
 		func(jti []byte) bool {
 			exist, err := tk.svr.db.AccessToken.Query().
 				Where(accesstoken.AccessTokenEQ(jti)).
 				Exist(context.Background())
 			if err != nil {
-				log.Debugf("access token jti query error: %v", err)
+				Log.Debugf("access token jti query error: %v", err)
 				return false
 			}
-			return exist
+			// access token uses black list
+			return !exist
 		},
 	)
-	// access token use black list
-	if exists || err != nil {
-		log.Debugf("access token exists: %t, error: %v", exists, err)
+	if err != nil {
+		Log.Debugf("access token error: %v", err)
+		return ErrInvalidToken
+	}
+	if !valid {
+		Log.Debugf("access token invalid")
 		return ErrInvalidToken
 	}
 	return nil
@@ -147,22 +153,26 @@ func (tk jwtToken) checkAccessToken() error {
 
 // checkRefreshToken checks the refresh token validity.
 // Accesses database. Debug logs errors.
-func (tk jwtToken) checkRefreshToken() error {
-	exists, err := tk.checkToken(
+func (tk *jwtToken) checkRefreshToken() error {
+	valid, err := tk.checkToken(
 		func(jti []byte) bool {
 			exist, err := tk.svr.db.AccessToken.Query().
 				Where(accesstoken.RefreshTokenEQ(jti)).
 				Exist(context.Background())
 			if err != nil {
-				log.Debugf("refresh token jti query error: %v", err)
+				Log.Debugf("refresh token jti query error: %v", err)
 				return false
 			}
-			return exist
+			// refresh token uses black list
+			return !exist
 		},
 	)
-	// refresh token use black list
-	if exists || err != nil {
-		log.Debugf("refresh token exists: %t, error: %v", exists, err)
+	if err != nil {
+		Log.Debugf("refresh token error: %v", err)
+		return ErrInvalidToken
+	}
+	if !valid {
+		Log.Debugf("refresh token invalid")
 		return ErrInvalidToken
 	}
 	return nil
@@ -170,41 +180,44 @@ func (tk jwtToken) checkRefreshToken() error {
 
 // checkPersonalToken checks the personal token validity.
 // Accesses database. Debug logs errors.
-func (tk jwtToken) checkPersonalToken() error {
-	exists, err := tk.checkToken(
+func (tk *jwtToken) checkPersonalToken() error {
+	valid, err := tk.checkToken(
 		func(jti []byte) bool {
 			exist, err := tk.svr.db.PersonalToken.Query().
 				Where(personaltoken.TokenEQ(jti)).Exist(context.Background())
 			if err != nil {
-				log.Debugf("personal token jti query error: %v", err)
+				Log.Debugf("personal token jti query error: %v", err)
 				return false
 			}
+			// personal token uses white list
 			return exist
 		},
 	)
-	// personal token use white list
-	if !exists || err != nil {
-		log.Debugf("personal token exists: %t, error: %v", exists, err)
+	if err != nil {
+		Log.Debugf("personal token error: %v", err)
+		return ErrInvalidToken
+	}
+	if !valid {
+		Log.Debugf("personal token invalid")
 		return ErrInvalidToken
 	}
 	return nil
 }
 
 // checkToken checks JTI & SUB:
-// * returns `true` if JTI exists in the database, otherwise `false`;
-// * calls getUserBySubject().
+// returns true if the token pass the `valid()` check, otherwise false;
+// also calls getUserBySubject() if the token is valid.
 // Accesses database. Debug logs errors.
-func (tk jwtToken) checkToken(exists func([]byte) bool) (bool, error) {
+func (tk *jwtToken) checkToken(valid func([]byte) bool) (bool, error) {
 	jti, err := tk.getJtiBinary()
 	if err != nil {
-		log.Debugf("invalid jti: %v", err)
+		Log.Debugf("invalid jti: %v", err)
 		return false, ErrInvalidToken
 	}
-	if !exists(jti) {
+	if !valid(jti) {
 		return false, ErrInvalidToken
 	}
-	err = tk.getUserBySubject()
-	if err != nil {
+	if err = tk.getUserBySubject(); err != nil {
 		return true, ErrInvalidToken
 	}
 	return true, nil
@@ -212,18 +225,18 @@ func (tk jwtToken) checkToken(exists func([]byte) bool) (bool, error) {
 
 // expired checks if the token is expired. Doesn't access database.
 // Debug logs errors.
-func (tk jwtToken) expired() error {
+func (tk *jwtToken) expired() error {
 	exp, err := tk.token.Claims.GetExpirationTime()
 	if err != nil {
-		log.Debugf("invalid expiration %v", err)
+		Log.Debugf("invalid expiration %v", err)
 		return ErrInvalidToken
 	}
 	if exp.IsZero() {
-		log.Debugf("zero expiration")
+		Log.Debugf("zero expiration")
 		return ErrInvalidToken
 	}
 	if exp.Before(time.Now()) {
-		log.Debugf(jwt.ErrTokenExpired.Error())
+		Log.Debugf(jwt.ErrTokenExpired.Error())
 		return jwt.ErrTokenExpired
 	}
 	return nil

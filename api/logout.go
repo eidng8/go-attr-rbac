@@ -9,8 +9,8 @@ func (s Server) Logout(
 ) (LogoutResponseObject, error) {
 	err := s.revokeAccessToken(ctx)
 	if err != nil {
-		log.Debugf("failed to revoke access token: %v", err)
-		return Logout401Response{}, err
+		Log.Debugf("failed to revoke access token: %v", err)
+		return Logout401JSONResponse{}, err
 	}
 	return Logout204Response{}, nil
 }

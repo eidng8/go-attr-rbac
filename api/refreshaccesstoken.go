@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,20 +15,18 @@ func (s Server) RefreshAccessToken(
 	}
 	token, err := s.getRefreshToken(gc)
 	if err != nil {
-		return RefreshAccessToken401Response{}, nil
+		return RefreshAccessToken401JSONResponse{}, nil
 	}
 	at, err := s.issueAccessToken(token.user)
 	if err != nil {
-		log.Debugf("failed to issue access token: %v", err)
-		return RefreshAccessToken401Response{}, nil
+		Log.Debugf("failed to issue access token: %v", err)
+		return RefreshAccessToken401JSONResponse{}, nil
 	}
 	rt, err := s.issueRefreshToken(token.user)
 	if err != nil {
-		log.Debugf("failed to issue refresh token: %v", err)
-		return RefreshAccessToken401Response{}, nil
+		Log.Debugf("failed to issue refresh token: %v", err)
+		return RefreshAccessToken401JSONResponse{}, nil
 	}
-	gc.SetSameSite(http.SameSiteStrictMode)
-	s.setCookie(gc, AccessTokenName, at, "/", 3600)
-	s.setCookie(gc, RefreshTokenName, rt, "/access-token", 7*24*3600)
+	s.setToken(gc, at, rt)
 	return RefreshAccessToken204Response{}, nil
 }
