@@ -17,6 +17,7 @@ import (
 	"github.com/eidng8/go-attr-rbac/api"
 )
 
+// UsernamePasswordParams is sample schema for username and password sign-in.
 var UsernamePasswordParams = ogen.Schema{
 	Type: "object",
 	Properties: []ogen.Property{
@@ -26,6 +27,7 @@ var UsernamePasswordParams = ogen.Schema{
 	Required: []string{"username", "password"},
 }
 
+// UsernamePasswordParams is sample schema for email and password sign-in.
 var EmailPasswordParams = ogen.Schema{
 	Type: "object",
 	Properties: []ogen.Property{
@@ -35,6 +37,7 @@ var EmailPasswordParams = ogen.Schema{
 	Required: []string{"username", "password"},
 }
 
+// UsernamePasswordParams is sample schema for token sign-in.
 var TokenParams = ogen.Schema{
 	Type: "object",
 	Properties: []ogen.Property{
@@ -49,7 +52,16 @@ func main() {
 		panic(err)
 	}
 	ext := entc.Extensions(oas, &ee.Extension{})
-	err = entc.Generate("./ent/schema", genConfig(), ext)
+	err = entc.Generate(
+		"./ent/schema", &gen.Config{
+			Features: []gen.Feature{
+				gen.FeatureIntercept,
+				gen.FeatureSnapshot, // remove this on first run
+				gen.FeatureExecQuery,
+				gen.FeatureVersionedMigration,
+			},
+		}, ext,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -270,17 +282,6 @@ func findParamByName(Params []*ogen.Parameter, name string) *ogen.Parameter {
 		}
 	}
 	return nil
-}
-
-func genConfig() *gen.Config {
-	return &gen.Config{
-		Features: []gen.Feature{
-			gen.FeatureIntercept,
-			gen.FeatureSnapshot,
-			gen.FeatureExecQuery,
-			gen.FeatureVersionedMigration,
-		},
-	}
 }
 
 func fixPaths(spec *ogen.Spec) {

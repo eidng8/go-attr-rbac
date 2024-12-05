@@ -1882,14 +1882,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "username": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 2
-                  },
                   "email": {
                     "type": "string",
                     "format": "email"
+                  },
+                  "attr": {
+                    "type": "object",
+                    "properties": {
+                      "dept": {
+                        "summary": "Department ID",
+                        "type": "integer",
+                        "format": "uint32",
+                        "minimum": 1
+                      },
+                      "level": {
+                        "summary": "Security Clarence Level",
+                        "type": "integer",
+                        "format": "uint8",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "dept",
+                      "level"
+                    ]
                   },
                   "roles": {
                     "type": "array",
@@ -2361,6 +2377,27 @@
                   "email": {
                     "type": "string",
                     "format": "email"
+                  },
+                  "attr": {
+                    "type": "object",
+                    "properties": {
+                      "dept": {
+                        "summary": "Department ID",
+                        "type": "integer",
+                        "format": "uint32",
+                        "minimum": 1
+                      },
+                      "level": {
+                        "summary": "Security Clarence Level",
+                        "type": "integer",
+                        "format": "uint8",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "dept",
+                      "level"
+                    ]
                   },
                   "roles": {
                     "type": "array",
@@ -3069,6 +3106,27 @@
             "type": "string",
             "format": "email"
           },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -3099,6 +3157,27 @@
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
           },
           "created_at": {
             "type": "string",
@@ -3155,6 +3234,27 @@
             "type": "string",
             "format": "email"
           },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -3186,6 +3286,27 @@
             "type": "string",
             "format": "email"
           },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -3216,6 +3337,27 @@
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
           },
           "created_at": {
             "type": "string",
@@ -3253,6 +3395,27 @@
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
           },
           "created_at": {
             "type": "string",

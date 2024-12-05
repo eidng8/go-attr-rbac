@@ -4,11 +4,13 @@ go 1.23.2
 
 require (
 	entgo.io/contrib v0.6.0
-	github.com/eidng8/go-attr-rbac v0.0.0-20241129065158-ffaee324741c
 	github.com/oapi-codegen/oapi-codegen/v2 v2.4.1
 )
 
-replace github.com/eidng8/go-attr-rbac => .
+replace (
+	github.com/eidng8/go-attr-rbac => .
+	github.com/eidng8/go-utils => ../go-utils
+)
 
 require (
 	github.com/getkin/kin-openapi v0.128.0
@@ -29,6 +31,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
+	github.com/eidng8/go-attr-rbac v0.0.0-00010101000000-000000000000 // indirect
 	github.com/eidng8/go-ent v0.1.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

@@ -39,7 +39,7 @@ func (PersonalToken) Fields() []ent.Field {
 				},
 			),
 		),
-		field.Uint64("user_id").Annotations(
+		field.Uint64("user_id").Immutable().Annotations(
 			entoas.Schema(
 				&ogen.Schema{
 					Type:    "integer",
@@ -58,14 +58,15 @@ func (PersonalToken) Fields() []ent.Field {
 				},
 			),
 		),
-		field.Bytes("token").Sensitive().Unique().
+		field.Bytes("token").Sensitive().Immutable().Unique().
 			SchemaType(
 				map[string]string{
-					dialect.MySQL:    "binary(32)",
-					dialect.Postgres: "binary(32)",
+					dialect.MySQL:    "binary(16)",
+					dialect.Postgres: "binary(16)",
+					dialect.SQLite:   "blob",
 				},
 			).
-			Annotations(entoas.Skip(true)),
+			Annotations(entoas.Skip(true), schema.Comment("token JTI")),
 		field.Time("created_at").Optional().Nillable().Immutable().
 			Default(time.Now).Annotations(
 			entoas.Schema(

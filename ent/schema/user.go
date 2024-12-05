@@ -40,15 +40,16 @@ func (User) Fields() []ent.Field {
 					},
 				),
 			),
-			field.String("username").Unique().Annotations(
-				entoas.Schema(
-					&ogen.Schema{
-						Type:      "string",
-						MinLength: &u2,
-						MaxLength: &u255,
-					},
+			field.String("username").Unique().NotEmpty().Immutable().
+				Annotations(
+					entoas.Schema(
+						&ogen.Schema{
+							Type:      "string",
+							MinLength: &u2,
+							MaxLength: &u255,
+						},
+					),
 				),
-			),
 			field.String("email").Optional().Unique().Annotations(
 				entoas.Schema(
 					&ogen.Schema{
@@ -60,6 +61,35 @@ func (User) Fields() []ent.Field {
 			field.String("password").Sensitive().NotEmpty().Annotations(
 				entoas.Skip(true),
 			),
+			field.JSON("attr", &map[string]interface{}{}).Optional().
+				Annotations(
+					entoas.Schema(
+						&ogen.Schema{
+							Type: "object",
+							Properties: []ogen.Property{
+								{
+									Name: "dept",
+									Schema: &ogen.Schema{
+										Type:    "integer",
+										Format:  "uint32",
+										Minimum: ogen.Num("1"),
+										Summary: "Department ID",
+									},
+								},
+								{
+									Name: "level",
+									Schema: &ogen.Schema{
+										Type:    "integer",
+										Format:  "uint8",
+										Minimum: ogen.Num("1"),
+										Summary: "Security Clarence Level",
+									},
+								},
+							},
+							Required: []string{"dept", "level"},
+						},
+					),
+				),
 		},
 		ee.Timestamps()...,
 	)

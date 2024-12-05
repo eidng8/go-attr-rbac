@@ -39,7 +39,7 @@ func (AccessToken) Fields() []ent.Field {
 				},
 			),
 		),
-		field.Uint64("user_id").Annotations(
+		field.Uint64("user_id").Immutable().Annotations(
 			entoas.Schema(
 				&ogen.Schema{
 					Type:    "integer",
@@ -48,18 +48,22 @@ func (AccessToken) Fields() []ent.Field {
 				},
 			),
 		),
-		field.Bytes("access_token").Sensitive().Unique().SchemaType(
-			map[string]string{
-				dialect.MySQL:    "binary(32)",
-				dialect.Postgres: "binary(32)",
-			},
-		).Annotations(entoas.Skip(true)),
-		field.Bytes("refresh_token").Sensitive().Unique().SchemaType(
-			map[string]string{
-				dialect.MySQL:    "binary(32)",
-				dialect.Postgres: "binary(32)",
-			},
-		).Annotations(entoas.Skip(true)),
+		field.Bytes("access_token").Sensitive().Unique().Immutable().
+			SchemaType(
+				map[string]string{
+					dialect.MySQL:    "binary(16)",
+					dialect.Postgres: "binary(16)",
+					dialect.SQLite:   "blob",
+				},
+			).Annotations(entoas.Skip(true)),
+		field.Bytes("refresh_token").Sensitive().Unique().Immutable().
+			SchemaType(
+				map[string]string{
+					dialect.MySQL:    "binary(16)",
+					dialect.Postgres: "binary(16)",
+					dialect.SQLite:   "blob",
+				},
+			).Annotations(entoas.Skip(true)),
 		field.Time("created_at").Optional().Nillable().Immutable().
 			Default(time.Now).Annotations(
 			entoas.Schema(
