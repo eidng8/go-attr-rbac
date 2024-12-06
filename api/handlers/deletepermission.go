@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// DeletePermission deletes a permission.
+//
+// Endpoint: DELETE /permission/{id}
 func (s Server) DeletePermission(
 	ctx context.Context, request DeletePermissionRequestObject,
 ) (DeletePermissionResponseObject, error) {

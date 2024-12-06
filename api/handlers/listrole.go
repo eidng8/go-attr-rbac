@@ -21,6 +21,9 @@ func (response ListRolePaginateResponse) VisitListRoleResponse(w http.ResponseWr
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListRole lists roles.
+//
+// Endpoint: GET /roles
 func (s Server) ListRole(
 	ctx context.Context, request ListRoleRequestObject,
 ) (ListRoleResponseObject, error) {

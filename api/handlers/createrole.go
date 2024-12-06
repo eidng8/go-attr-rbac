@@ -7,6 +7,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// CreateRole creates a role.
+//
+// Endpoint: POST /roles
 func (s Server) CreateRole(
 	ctx context.Context, request CreateRoleRequestObject,
 ) (CreateRoleResponseObject, error) {

@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// UpdateRole updates a role.
+//
+// Endpoint: PATCH /role/{id}
 func (s Server) UpdateRole(
 	ctx context.Context, request UpdateRoleRequestObject,
 ) (UpdateRoleResponseObject, error) {

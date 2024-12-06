@@ -21,6 +21,9 @@ func (response ListPermissionTokenPaginateResponse) VisitListPermissionResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListPermission lists permissions.
+//
+// Endpoint: GET /permissions
 func (s Server) ListPermission(
 	ctx context.Context, request ListPermissionRequestObject,
 ) (ListPermissionResponseObject, error) {

@@ -9,6 +9,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
+// ReadUser reads a user.
+//
+// Endpoint: GET /user/{id}
 func (s Server) ReadUser(
 	ctx context.Context, request ReadUserRequestObject,
 ) (ReadUserResponseObject, error) {

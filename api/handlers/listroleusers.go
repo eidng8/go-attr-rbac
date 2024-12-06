@@ -22,6 +22,9 @@ func (response ListRoleUsersPaginateResponse) VisitListRoleUsersResponse(w http.
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListRoleUsers lists roles of a user
+//
+// Endpoint: GET /role/{id}/users
 func (s Server) ListRoleUsers(
 	ctx context.Context, request ListRoleUsersRequestObject,
 ) (ListRoleUsersResponseObject, error) {

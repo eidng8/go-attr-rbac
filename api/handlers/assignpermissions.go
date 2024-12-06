@@ -4,6 +4,9 @@ import (
 	"context"
 )
 
+// AssignPermissions assigns permissions to a role.
+//
+// Endpoint: POST /role/{id}/permissions
 func (s Server) AssignPermissions(
 	_ context.Context, request AssignPermissionsRequestObject,
 ) (AssignPermissionsResponseObject, error) {

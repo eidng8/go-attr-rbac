@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
 
+// ReadPermission reads a permission.
+//
+// Endpoint: GET /permission/{id}
 func (s Server) ReadPermission(
 	ctx context.Context, request ReadPermissionRequestObject,
 ) (ReadPermissionResponseObject, error) {

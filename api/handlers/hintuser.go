@@ -8,6 +8,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
+// HintUsers returns a short list of users.
+//
+// Endpoint: GET /q/users
 func (s Server) HintUsers(
 	_ context.Context, request HintUsersRequestObject,
 ) (HintUsersResponseObject, error) {

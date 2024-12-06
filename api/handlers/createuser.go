@@ -9,6 +9,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// CreateUser creates a user.
+//
+// Endpoint: POST /users
 func (s Server) CreateUser(
 	ctx context.Context, request CreateUserRequestObject,
 ) (CreateUserResponseObject, error) {

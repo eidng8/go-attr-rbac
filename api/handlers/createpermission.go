@@ -7,6 +7,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// CreatePermission creates a permission.
+//
+// Endpoint: POST /permissions
 func (s Server) CreatePermission(
 	ctx context.Context, request CreatePermissionRequestObject,
 ) (CreatePermissionResponseObject, error) {

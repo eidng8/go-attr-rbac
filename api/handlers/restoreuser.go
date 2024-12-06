@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// RestoreUser restores a user.
+//
+// Endpoint: POST /user/{id}/restore
 func (s Server) RestoreUser(
 	ctx context.Context, request RestoreUserRequestObject,
 ) (RestoreUserResponseObject, error) {

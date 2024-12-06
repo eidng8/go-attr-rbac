@@ -21,6 +21,9 @@ func (response ListUserPaginateResponse) VisitListUserResponse(w http.ResponseWr
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListUser lists users.
+//
+// Endpoint: GET /users
 func (s Server) ListUser(
 	ctx context.Context, request ListUserRequestObject,
 ) (ListUserResponseObject, error) {

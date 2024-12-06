@@ -8,6 +8,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// UpdateUser updates a user.
+//
+// Endpoint: PATCH /user/{id}
 func (s Server) UpdateUser(
 	ctx context.Context, request UpdateUserRequestObject,
 ) (UpdateUserResponseObject, error) {

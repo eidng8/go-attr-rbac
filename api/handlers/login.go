@@ -10,6 +10,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
+// Login authenticates the user and sets the access and refresh token cookie.
+//
+// Endpoint: POST /login
 func (s Server) Login(
 	ctx context.Context, request LoginRequestObject,
 ) (LoginResponseObject, error) {

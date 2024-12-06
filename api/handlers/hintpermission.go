@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
 
+// HintPermissions returns a short list of permissions.
+//
+// Endpoint: GET /q/permissions
 func (s Server) HintPermissions(
 	_ context.Context, request HintPermissionsRequestObject,
 ) (HintPermissionsResponseObject, error) {

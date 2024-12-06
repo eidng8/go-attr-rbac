@@ -98,6 +98,8 @@ func getUserById(tb testing.TB, db *ent.Client, id uint64) *ent.User {
 
 func pluckPermissionId(row *ent.Permission) uint32 { return row.ID }
 
+func pluckRoleId(row *ent.Role) uint32 { return row.ID }
+
 func (s Server) requestAs(
 	tb testing.TB, usr *ent.User, method string, url string, body io.Reader,
 ) *http.Request {

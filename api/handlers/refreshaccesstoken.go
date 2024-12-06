@@ -8,6 +8,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/api"
 )
 
+// RefreshAccessToken refreshes the current access token.
+//
+// Endpoint: DELETE /access-token
 func (s Server) RefreshAccessToken(
 	ctx context.Context, _ RefreshAccessTokenRequestObject,
 ) (RefreshAccessTokenResponseObject, error) {

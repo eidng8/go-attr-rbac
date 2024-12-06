@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/api"
 )
 
+// RevokeAccessToken revokes the current access token and its corresponding refresh token.
+//
+// Endpoint: DELETE /access-token
 func (s Server) RevokeAccessToken(
 	ctx context.Context, _ RevokeAccessTokenRequestObject,
 ) (RevokeAccessTokenResponseObject, error) {

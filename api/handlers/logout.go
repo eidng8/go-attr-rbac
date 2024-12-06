@@ -6,6 +6,10 @@ import (
 	"github.com/eidng8/go-attr-rbac/api"
 )
 
+// Logout revokes the current access token and its corresponding refresh token.
+// and clears the access and refresh token cookie.
+//
+// Endpoint: POST /logout
 func (s Server) Logout(
 	ctx context.Context, _ LogoutRequestObject,
 ) (LogoutResponseObject, error) {

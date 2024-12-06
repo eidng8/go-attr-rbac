@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// DeleteRole deletes a role.
+//
+// Endpoint: DELETE /role/{id}
 func (s Server) DeleteRole(
 	ctx context.Context, request DeleteRoleRequestObject,
 ) (DeleteRoleResponseObject, error) {

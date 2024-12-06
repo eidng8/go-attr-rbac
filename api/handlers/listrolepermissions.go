@@ -22,6 +22,9 @@ func (response ListRolePermissionsPaginateResponse) VisitListRolePermissionsResp
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListRolePermissions lists permissions of a role.
+//
+// Endpoint: GET /role/{id}/permissions
 func (s Server) ListRolePermissions(
 	ctx context.Context, request ListRolePermissionsRequestObject,
 ) (ListRolePermissionsResponseObject, error) {

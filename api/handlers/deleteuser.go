@@ -8,6 +8,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// DeleteUser deletes a user.
+//
+// Endpoint: DELETE /user/{id}
 func (s Server) DeleteUser(
 	ctx context.Context, request DeleteUserRequestObject,
 ) (DeleteUserResponseObject, error) {

@@ -7,6 +7,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
+// UpdatePermission updates a permission.
+//
+// Endpoint: PATCH /permission/{id}
 func (s Server) UpdatePermission(
 	ctx context.Context, request UpdatePermissionRequestObject,
 ) (UpdatePermissionResponseObject, error) {

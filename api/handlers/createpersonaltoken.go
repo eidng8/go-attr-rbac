@@ -13,6 +13,9 @@ type ut struct {
 	user  *ent.User
 }
 
+// CreatePersonalToken creates a personal token.
+//
+// Endpoint: POST /personal-tokens
 func (s Server) CreatePersonalToken(
 	ctx context.Context, request CreatePersonalTokenRequestObject,
 ) (CreatePersonalTokenResponseObject, error) {

@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/role"
 )
 
+// HintRoles returns a short list of roles.
+//
+// Endpoint: GET /q/roles
 func (s Server) HintRoles(
 	_ context.Context, request HintRolesRequestObject,
 ) (HintRolesResponseObject, error) {

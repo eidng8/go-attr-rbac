@@ -6,7 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/personaltoken"
 )
 
-// ReadPersonalToken verifies the specified personal token
+// ReadPersonalToken verifies the specified personal token and returns its user.
+//
+// Endpoint: GET "/personal-token/{id}"
 func (s Server) ReadPersonalToken(
 	ctx context.Context, request ReadPersonalTokenRequestObject,
 ) (ReadPersonalTokenResponseObject, error) {

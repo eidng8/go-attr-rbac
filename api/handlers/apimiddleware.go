@@ -12,7 +12,7 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/role"
 )
 
-// authMiddleware authorizes the request and stores token's user with roles to
+// Authorizes the request and stores token's user with roles to
 // gin context value accessTokenName.
 func (s Server) authMiddleware() StrictMiddlewareFunc {
 	return func(f StrictHandlerFunc, operationID string) StrictHandlerFunc {

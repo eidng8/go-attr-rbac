@@ -6,6 +6,9 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/role"
 )
 
+// ReadRole reads a role.
+//
+// Endpoint: GET /role/{id}
 func (s Server) ReadRole(
 	ctx context.Context, request ReadRoleRequestObject,
 ) (ReadRoleResponseObject, error) {

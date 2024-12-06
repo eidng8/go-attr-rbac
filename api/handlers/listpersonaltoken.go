@@ -21,6 +21,9 @@ func (response ListPersonalTokenPaginateResponse) VisitListPersonalTokenResponse
 	return json.NewEncoder(w).Encode(response)
 }
 
+// ListPersonalToken lists personal tokens.
+//
+// Endpoint: GET "/personal-tokens"
 func (s Server) ListPersonalToken(
 	ctx context.Context, _ ListPersonalTokenRequestObject,
 ) (ListPersonalTokenResponseObject, error) {

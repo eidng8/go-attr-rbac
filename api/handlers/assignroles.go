@@ -4,6 +4,9 @@ import (
 	"context"
 )
 
+// AssignRoles assigns roles to a user.
+//
+// Endpoint: POST /users/{id}/roles
 func (s Server) AssignRoles(
 	_ context.Context, request AssignRolesRequestObject,
 ) (AssignRolesResponseObject, error) {
