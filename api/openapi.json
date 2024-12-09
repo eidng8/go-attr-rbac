@@ -292,10 +292,12 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                   },
                   "roles": {
                     "type": "array",
@@ -502,10 +504,12 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                   },
                   "roles": {
                     "type": "array",
@@ -806,8 +810,8 @@
                   "description": {
                     "type": "string",
                     "format": "uint64",
-                    "maximum": 255,
-                    "minimum": 1
+                    "maxLength": 255,
+                    "minLength": 2
                   },
                   "created_at": {
                     "type": "string",
@@ -1132,10 +1136,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                   },
                   "permissions": {
                     "type": "array",
@@ -1683,10 +1690,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                   },
                   "permissions": {
                     "type": "array",
@@ -2619,10 +2629,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2653,10 +2665,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2681,10 +2695,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2709,10 +2725,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2737,10 +2755,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2772,8 +2792,8 @@
           "description": {
             "type": "string",
             "format": "uint64",
-            "maximum": 255,
-            "minimum": 1
+            "maxLength": 255,
+            "minLength": 2
           },
           "created_at": {
             "type": "string",
@@ -2805,8 +2825,8 @@
           "description": {
             "type": "string",
             "format": "uint64",
-            "maximum": 255,
-            "minimum": 1
+            "maxLength": 255,
+            "minLength": 2
           },
           "created_at": {
             "type": "string",
@@ -2835,8 +2855,8 @@
           "description": {
             "type": "string",
             "format": "uint64",
-            "maximum": 255,
-            "minimum": 1
+            "maxLength": 255,
+            "minLength": 2
           },
           "created_at": {
             "type": "string",
@@ -2865,8 +2885,8 @@
           "description": {
             "type": "string",
             "format": "uint64",
-            "maximum": 255,
-            "minimum": 1
+            "maxLength": 255,
+            "minLength": 2
           },
           "created_at": {
             "type": "string",
@@ -2895,8 +2915,8 @@
           "description": {
             "type": "string",
             "format": "uint64",
-            "maximum": 255,
-            "minimum": 1
+            "maxLength": 255,
+            "minLength": 2
           },
           "created_at": {
             "type": "string",
@@ -2918,10 +2938,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2958,10 +2981,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -2986,10 +3012,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -3014,10 +3043,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -3042,10 +3074,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -3070,10 +3105,12 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",
@@ -3440,10 +3477,13 @@
             "minimum": 1
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 255
           },
           "created_at": {
             "type": "string",

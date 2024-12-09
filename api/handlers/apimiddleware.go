@@ -17,7 +17,7 @@ import (
 func (s Server) authMiddleware() StrictMiddlewareFunc {
 	return func(f StrictHandlerFunc, operationID string) StrictHandlerFunc {
 		return func(gc *gin.Context, request interface{}) (interface{}, error) {
-			if slices.Contains(s.publicOperations, operationID) {
+			if s.isPublicOperation(operationID) {
 				// pass-through public paths
 				return f(gc, request)
 			}
@@ -53,6 +53,13 @@ func (s Server) authMiddleware() StrictMiddlewareFunc {
 	}
 }
 
+func (s Server) isPublicOperation(operationID string) bool {
+	if !strings.Contains(operationID, "") {
+		operationID = "auth:" + operationID
+	}
+	return slices.Contains(s.publicOperations, operationID)
+}
+
 func (s Server) handleAuthHeader(method, token string) (t *jwtToken, e error) {
 	switch strings.ToLower(method) {
 	case "bearer": // process access token
@@ -82,8 +89,7 @@ func (s Server) handleBearerAuth(token string) (*jwtToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = t.checkAccessToken()
-	if err != nil {
+	if err = t.checkAccessToken(); err != nil {
 		return nil, err
 	}
 	return t, nil
@@ -126,7 +132,7 @@ func authHeader(gc *gin.Context) (string, string, error) {
 // TODO add user role caching
 func loadRoles(u *ent.User) error {
 	roles, err := u.QueryRoles().Select(role.FieldID, role.FieldName).
-		All(context.Background())
+		Order(role.ByID()).All(context.Background())
 	if err != nil {
 		return err
 	}

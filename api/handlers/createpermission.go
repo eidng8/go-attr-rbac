@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/eidng8/go-attr-rbac/ent"
 )
@@ -16,23 +15,17 @@ func (s Server) CreatePermission(
 	p, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
-			p, err := tx.Permission.Create().
-				SetName(request.Body.Name).
-				SetDescription(*request.Body.Description).
-				Save(ctx)
-			if err != nil {
-				return nil, err
+			create := tx.Permission.Create().SetName(request.Body.Name)
+			if request.Body.Description != nil {
+				create.SetDescription(*request.Body.Description)
 			}
-			return p, nil
+			return create.Save(ctx)
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-	perm, ok := p.(*ent.Permission)
-	if !ok {
-		return nil, fmt.Errorf("failed to create permission: %T", p)
-	}
+	perm := p.(*ent.Permission)
 	return CreatePermission200JSONResponse{
 		Id:          perm.ID,
 		Name:        perm.Name,

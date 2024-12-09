@@ -23,11 +23,12 @@ const (
 )
 
 var (
-	errInvalidToken   = errors.New("invalid_token")
-	errEmptyToken     = errors.New("empty_token")
-	errInvalidContext = errors.New("invalid_context")
-	errInvalidHeader  = errors.New("invalid_header")
-	errAccessDenied   = errors.New("access_denied")
+	errInvalidArgument = errors.New("invalid_argument")
+	errInvalidToken    = errors.New("invalid_token")
+	errEmptyToken      = errors.New("empty_token")
+	errInvalidContext  = errors.New("invalid_context")
+	errInvalidHeader   = errors.New("invalid_header")
+	errAccessDenied    = errors.New("access_denied")
 )
 
 type jwtToken struct {
@@ -36,23 +37,11 @@ type jwtToken struct {
 	user  *ent.User
 }
 
-// a sample user attribute
-type userAttribute struct {
-	// department id
-	Dept uint32 `json:"dept,omitempty"`
-	// security clarence level, lower number means higher level
-	Level uint8 `json:"level,omitempty"`
-}
-
 type accessTokenClaims struct {
 	jwt.RegisteredClaims
-	Roles *[]string               `json:"roles,omitempty"`
-	Attr  *map[string]interface{} `json:"attr,omitempty"`
-}
-
-type personalTokenClaims struct {
-	jwt.RegisteredClaims
-	Scopes string `json:"scopes,omitempty"`
+	Roles  *[]string               `json:"roles,omitempty"`
+	Attr   *map[string]interface{} `json:"attr,omitempty"`
+	Scopes *[]string               `json:"scopes,omitempty"`
 }
 
 func (tk *jwtToken) getRoles() (*[]string, error) {
@@ -134,7 +123,7 @@ func (tk *jwtToken) getJtiBinary() ([]byte, error) {
 // Accesses database. Debug logs errors.
 func (tk *jwtToken) getUserBySubject() error {
 	subject, err := tk.token.Claims.GetSubject()
-	if err != nil {
+	if err != nil || "" == subject {
 		api.Log.Debugf("failed to get subject from token: %v", err)
 		return errInvalidToken
 	}

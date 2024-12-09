@@ -19,57 +19,73 @@ import (
 )
 
 func (s Server) issueAccessToken(user *ent.User) (string, error) {
-	roles, err := user.QueryRoles().Select("name").All(context.Background())
-	if err != nil {
-		return "", err
-	}
-	r := utils.Pluck(roles, func(r *ent.Role) string { return r.Name })
-	return s.issueJwtToken(user, time.Hour, &r)
+	return s.issueJwtToken(user, time.Hour)
 }
 
 func (s Server) issueRefreshToken(user *ent.User) (string, error) {
-	return s.issueJwtToken(user, 7*24*time.Hour, nil)
+	return s.issueJwtToken(user, 7*24*time.Hour)
 }
 
 func (s Server) issuePersonalToken(user *ent.User, scopes string) (
 	string, error,
 ) {
-	return s.issueJwtToken(user, 7*24*time.Hour, nil)
+	return s.issueJwtToken(user, 7*24*time.Hour)
 }
 
 // issueAccessToken issues an access token for the user.
 // Doesn't access database.
-func (s Server) issueJwtToken(
-	user *ent.User, ttl time.Duration, roles *[]string,
+func (s Server) issueJwtToken(user *ent.User, ttl time.Duration) (
+	string, error,
+) {
+	claims, err := s.buildTokenClaims(user, ttl)
+	if err != nil {
+		return "", err
+	}
+	return s.issueJwtTokenWithClaims(jwt.SigningMethodHS256, claims)
+}
+
+func (s Server) issueJwtTokenWithClaims(
+	method jwt.SigningMethod, claims *accessTokenClaims,
 ) (string, error) {
-	var attr *map[string]interface{}
+	t := jwt.NewWithClaims(method, claims)
+	ts, err := t.SignedString(s.secret)
+	if err != nil {
+		return "", err
+	}
+	return ts, nil
+}
+
+func (s Server) buildTokenClaims(user *ent.User, ttl time.Duration) (
+	*accessTokenClaims, error,
+) {
+	if user == nil {
+		return nil, errInvalidArgument
+	}
+	var roles *[]string = nil
+	var attr *map[string]interface{} = nil
 	uid, err := uuid.NewV7()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if roles != nil {
+	if user.Edges.Roles != nil {
 		attr = user.Attr
+		r := utils.Pluck(
+			user.Edges.Roles, func(r *ent.Role) string { return r.Name },
+		)
+		roles = &r
 	}
-	claims := jwt.NewWithClaims(
-		jwt.SigningMethodHS256, accessTokenClaims{
-			Roles: roles,
-			Attr:  attr,
-			RegisteredClaims: jwt.RegisteredClaims{
-				ID:        uid.String(),
-				Audience:  []string{s.Domain()}, // TODO allow customize?
-				Issuer:    s.Domain(),           // TODO allow customize?
-				Subject:   fmt.Sprintf("%d", user.ID),
-				IssuedAt:  &jwt.NumericDate{Time: time.Now()},
-				ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(ttl)},
-			},
+	return &accessTokenClaims{
+		Roles: roles,
+		Attr:  attr,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uid.String(),
+			Audience:  []string{s.Domain()}, // TODO allow customize?
+			Issuer:    s.Domain(),           // TODO allow customize?
+			Subject:   fmt.Sprintf("%d", user.ID),
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(ttl * time.Second)},
 		},
-	)
-	claims.Method = jwt.SigningMethodHS256
-	token, err := claims.SignedString(s.secret)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+	}, nil
 }
 
 func (s Server) jwtTokenFromString(token string) (*jwtToken, error) {

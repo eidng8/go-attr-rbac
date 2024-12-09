@@ -28,6 +28,7 @@ func (User) Annotations() []schema.Annotation {
 
 func (User) Fields() []ent.Field {
 	u2 := uint64(2)
+	u8 := uint64(8)
 	u255 := uint64(255)
 	return append(
 		[]ent.Field{
@@ -60,6 +61,13 @@ func (User) Fields() []ent.Field {
 			),
 			field.String("password").Sensitive().NotEmpty().Annotations(
 				entoas.Skip(true),
+				entoas.Schema(
+					&ogen.Schema{
+						Type:      "string",
+						MinLength: &u8,
+						MaxLength: &u255,
+					},
+				),
 			),
 			field.JSON("attr", &map[string]interface{}{}).Optional().
 				Annotations(

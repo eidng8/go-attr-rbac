@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/eidng8/go-utils"
@@ -19,25 +17,32 @@ func Test_AssignRoles_attaches_role_to_user(t *testing.T) {
 	rows := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).AllX(context.Background())
 	ids := utils.Pluck(rows, pluckRoleId)
-	json := "[" + utils.JoinInteger(ids, ",") + "]"
-	body := io.NopCloser(strings.NewReader(json))
-	usr := getUserById(t, db, 2)
-	req := svr.requestAs(t, usr, http.MethodPost, "/user/3/roles", body)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/user/3/roles", ids)
+	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusNoContent, res.Code)
 	rows = db.User.Query().Where(user.IDEQ(3)).QueryRoles().
-		Select(role.FieldID).Limit(3).AllX(context.Background())
+		Select(role.FieldID).Limit(3).Order(role.ByID()).
+		AllX(context.Background())
 	require.Equal(t, ids, utils.Pluck(rows, pluckRoleId))
 }
 
+func Test_AssignRoles_reports_422_if_role_is_empty(t *testing.T) {
+	svr, engine, db, res := setup(t, true)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/user/3/roles", nil)
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
+}
+
 func Test_AssignRoles_denies_non_user(t *testing.T) {
-	_, engine, db, res := setup(t, true)
+	svr, engine, db, res := setup(t, false)
 	rows := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).AllX(context.Background())
 	ids := utils.Pluck(rows, pluckRoleId)
-	json := "[" + utils.JoinInteger(ids, ",") + "]"
-	body := io.NopCloser(strings.NewReader(json))
-	req, err := http.NewRequest(http.MethodPost, "/user/3/roles", body)
+	req, err := svr.post("/user/3/roles", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusUnauthorized, res.Code)
@@ -47,14 +52,13 @@ func Test_AssignRoles_denies_non_user(t *testing.T) {
 }
 
 func Test_AssignRoles_denies_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setup(t, false)
 	rows := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).AllX(context.Background())
 	ids := utils.Pluck(rows, pluckRoleId)
-	json := "[" + utils.JoinInteger(ids, ",") + "]"
-	body := io.NopCloser(strings.NewReader(json))
 	usr := getUserById(t, db, 3)
-	req := svr.requestAs(t, usr, http.MethodPost, "/user/3/roles", body)
+	req, err := svr.postAs(usr, "/user/3/roles", ids)
+	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusForbidden, res.Code)
 	ex := db.User.Query().Where(user.IDEQ(3)).QueryRoles().

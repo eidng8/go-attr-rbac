@@ -11,8 +11,9 @@ import (
 
 func Test_issueAccessToken(t *testing.T) {
 	var actual any
-	server, _, db, _ := setup(t, true)
+	server, _, db, _ := setup(t, false)
 	u := getUserById(t, db, 1)
+	require.Nil(t, loadRoles(u))
 	accessToken, err := server.issueAccessToken(u)
 	require.Nil(t, err)
 	at, err := server.jwtTokenFromString(accessToken)
@@ -41,7 +42,7 @@ func Test_issueAccessToken(t *testing.T) {
 
 func Test_issueRefreshToken(t *testing.T) {
 	var actual any
-	server, _, db, _ := setup(t, true)
+	server, _, db, _ := setup(t, false)
 	u := getUserById(t, db, 1)
 	refreshToken, err := server.issueRefreshToken(u)
 	require.Nil(t, err)
@@ -65,4 +66,10 @@ func Test_issueRefreshToken(t *testing.T) {
 	actual, err = rt.getAttr()
 	require.True(t, errors.Is(err, errInvalidToken))
 	require.Nil(t, actual)
+}
+
+func Test_issueJwtToken_handles_nil_user(t *testing.T) {
+	server, _, _, _ := setup(t, false)
+	_, err := server.issueJwtToken(nil, time.Hour)
+	require.True(t, errors.Is(err, errInvalidArgument))
 }

@@ -23,6 +23,8 @@ func (Role) Annotations() []schema.Annotation {
 }
 
 func (Role) Fields() []ent.Field {
+	u1 := uint64(1)
+	u255 := uint64(255)
 	return append(
 		[]ent.Field{
 			field.Uint32("id").Annotations(
@@ -34,8 +36,23 @@ func (Role) Fields() []ent.Field {
 					},
 				),
 			),
-			field.String("name").Unique(),
-			field.String("description").Optional(),
+			field.String("name").Unique().NotEmpty().Annotations(
+				entoas.Schema(
+					&ogen.Schema{
+						Type:      "string",
+						MinLength: &u1,
+						MaxLength: &u255,
+					},
+				),
+			),
+			field.String("description").Optional().Annotations(
+				entoas.Schema(
+					&ogen.Schema{
+						Type:      "string",
+						MaxLength: &u255,
+					},
+				),
+			),
 		},
 		ee.Timestamps()...,
 	)

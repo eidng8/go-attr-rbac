@@ -29,6 +29,8 @@ func (PersonalToken) Annotations() []schema.Annotation {
 }
 
 func (PersonalToken) Fields() []ent.Field {
+	u2 := uint64(2)
+	u255 := uint64(255)
 	return []ent.Field{
 		field.Uint64("id").Annotations(
 			entoas.Schema(
@@ -48,13 +50,13 @@ func (PersonalToken) Fields() []ent.Field {
 				},
 			),
 		),
-		field.String("description").Annotations(
+		field.String("description").NotEmpty().Annotations(
 			entoas.Schema(
 				&ogen.Schema{
-					Type:    "string",
-					Format:  "uint64",
-					Minimum: ogen.Num("1"),
-					Maximum: ogen.Num("255"),
+					Type:      "string",
+					Format:    "uint64",
+					MinLength: &u2,
+					MaxLength: &u255,
 				},
 			),
 		),

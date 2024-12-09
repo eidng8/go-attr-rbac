@@ -11,7 +11,7 @@ import (
 )
 
 // Login authenticates the user and sets the access and refresh token cookie.
-//
+// TODO login using personal token?
 // Endpoint: POST /login
 func (s Server) Login(
 	ctx context.Context, request LoginRequestObject,
