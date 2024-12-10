@@ -218,8 +218,7 @@ func (s Server) operationAllowed(user *ent.User, operation string) error {
 	}
 	a := utils.Pluck(user.Edges.Roles, func(r *ent.Role) uint32 { return r.ID })
 	found, err := s.db.Role.Query().Where(role.IDIn(a...)).QueryPermissions().
-		Where(permission.NameEQ("auth:" + operation)).
-		Exist(context.Background())
+		Where(permission.NameEQ(operation)).Exist(context.Background())
 	if err != nil {
 		return err
 	}

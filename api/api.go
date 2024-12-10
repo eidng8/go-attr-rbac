@@ -5,17 +5,20 @@ import (
 )
 
 const (
-	BaseUrlName             = "BASE_URL"
-	PrivateKeyName          = "PRIVATE_KEY"
-	HintSizeName            = "HINT_SIZE"
-	PublicOpsName           = "PUBLIC_OPERATIONS"
-	RefreshTokenPath        = "/access-token/refresh"
-	PasswordHashTimesName   = "PASSWORD_HASH_TIMES"
-	PasswordHashMemoryName  = "PASSWORD_HASH_MEMORY"
-	PasswordHashThreadsName = "PASSWORD_HASH_THREADS"
-	PasswordHashKeyLenName  = "PASSWORD_HASH_KEY_LENGTH"
+	BaseUrlName    = "BASE_URL"
+	PrivateKeyName = "PRIVATE_KEY"
+	HintSizeName   = "HINT_SIZE"
+	PublicOpsName  = "PUBLIC_OPERATIONS"
+
+	OperationLogin        = "auth:Login"
+	OperationRefreshToken = "auth:RefreshAccessToken"
+	RefreshTokenPath      = "/access-token/refresh"
 )
 
 var (
 	Log = utils.NewLogger()
+
+	ResponseMessageCredentialNotFound interface{} = "invalid credentials"
+
+	ResponseMessageCredentialsInvalid interface{} = "invalid credentials"
 )

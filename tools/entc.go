@@ -9,7 +9,7 @@ import (
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
-	ee "github.com/eidng8/go-ent"
+	eec "github.com/eidng8/go-ent/entc"
 	"github.com/eidng8/go-ent/paginate"
 	"github.com/eidng8/go-ent/softdelete"
 	"github.com/ogen-go/ogen"
@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	ext := entc.Extensions(oas, &ee.Extension{})
+	ext := entc.Extensions(oas, &eec.ClientExtension{})
 	err = entc.Generate(
 		"./ent/schema", &gen.Config{
 			Features: []gen.Feature{
@@ -371,6 +371,18 @@ func fixPaths(spec *ogen.Spec) {
 }
 
 func fixResponses(spec *ogen.Spec) {
+	spec.Paths["/permissions"].Post.Responses["201"] =
+		spec.Paths["/permissions"].Post.Responses["200"]
+	delete(spec.Paths["/permissions"].Post.Responses, "200")
+	spec.Paths["/personal-tokens"].Post.Responses["201"] =
+		spec.Paths["/personal-tokens"].Post.Responses["200"]
+	delete(spec.Paths["/personal-tokens"].Post.Responses, "200")
+	spec.Paths["/roles"].Post.Responses["201"] =
+		spec.Paths["/roles"].Post.Responses["200"]
+	delete(spec.Paths["/roles"].Post.Responses, "200")
+	spec.Paths["/users"].Post.Responses["201"] =
+		spec.Paths["/users"].Post.Responses["200"]
+	delete(spec.Paths["/users"].Post.Responses, "200")
 	spec.Components.Responses["401"].Content =
 		spec.Components.Responses["403"].Content
 	for _, path := range spec.Paths {

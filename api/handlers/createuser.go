@@ -36,7 +36,7 @@ func (s Server) CreateUser(
 		return nil, fmt.Errorf("failed to create user: %T", u)
 	}
 	email := types.Email(user.Email)
-	return CreateUser200JSONResponse{
+	return CreateUser201JSONResponse{
 		Id:        user.ID,
 		Username:  user.Username,
 		Email:     &email,

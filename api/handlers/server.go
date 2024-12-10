@@ -1,13 +1,9 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
-	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/eidng8/go-utils"
@@ -35,48 +31,12 @@ type Server struct {
 	// list of public operations
 	publicOperations []string
 	// password hash parameters, for `argon2id`
-	passwordHashParams PasswordHashParams
-}
-
-type PasswordHashParams struct {
-	Times   uint32
-	Memory  uint32
-	Threads uint8
-	KeyLen  uint32
-}
-
-func defaultPasswordHashParams() (*PasswordHashParams, error) {
-	s := utils.GetEnvWithDefault(api.PasswordHashTimesName, "1")
-	times, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	s = utils.GetEnvWithDefault(api.PasswordHashMemoryName, "65536")
-	memory, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	s = utils.GetEnvWithDefault(api.PasswordHashThreadsName, "4")
-	threads, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	s = utils.GetEnvWithDefault(api.PasswordHashKeyLenName, "32")
-	keyLen, err := strconv.ParseUint(s, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	return &PasswordHashParams{
-		Times:   uint32(times),
-		Memory:  uint32(memory),
-		Threads: uint8(threads),
-		KeyLen:  uint32(keyLen),
-	}, nil
+	passwordHashParams utils.PasswordHashParams
 }
 
 func NewEngine(entClient *ent.Client) (*Server, *gin.Engine, error) {
 	if nil != entClient {
-		params, err := defaultPasswordHashParams()
+		params, err := utils.DefaultPasswordHashParams()
 		utils.PanicIfError(err)
 		dbSetup(entClient, *params)
 		// entClient = entClient.Debug()
@@ -135,6 +95,9 @@ func newSwaggerServer(engine *gin.Engine) *openapi3.T {
 					c *gin.Context, message string, statusCode int,
 				) {
 					if http.StatusBadRequest == statusCode {
+						message, _ = strings.CutPrefix(
+							message, "error in openapi3filter.",
+						)
 						c.AbortWithStatusJSON(
 							http.StatusUnprocessableEntity,
 							gin.H{"error": message},
@@ -149,49 +112,6 @@ func newSwaggerServer(engine *gin.Engine) *openapi3.T {
 		),
 	)
 	return swagger
-}
-
-func getHintSize(defaultValue int64) int {
-	hintSize, err := strconv.ParseInt(
-		utils.GetEnvWithDefaultNE(api.HintSizeName, "5"), 10, 32,
-	)
-	utils.PanicIfError(err)
-	if hintSize < 1 {
-		hintSize = defaultValue
-	}
-	return int(hintSize)
-}
-
-func getPublicOperations() []string {
-	ops := slices.DeleteFunc(
-		strings.Split(os.Getenv(api.PublicOpsName), ","),
-		func(s string) bool { return "" == s },
-	)
-	if !slices.Contains(ops, "login") {
-		ops = append(ops, "login")
-	}
-	if !slices.Contains(ops, "refreshAccessToken") {
-		ops = append(ops, "refreshAccessToken")
-	}
-	// convert ops to CamelCase
-	for i, op := range ops {
-		ops[i] = strings.ToUpper(op[:1]) + op[1:]
-	}
-	return ops
-}
-
-func getSecret() ([]byte, error) {
-	secret := os.Getenv(api.PrivateKeyName)
-	if "" == secret {
-		return nil, fmt.Errorf(
-			"%s environment variable is not set", api.PrivateKeyName,
-		)
-	}
-	key, err := base64.StdEncoding.DecodeString(secret)
-	if err != nil {
-		return nil, err
-	}
-	return key, nil
 }
 
 // Domain returns the domain name of base URL.

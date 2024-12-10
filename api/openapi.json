@@ -293,6 +293,7 @@
                 "properties": {
                   "name": {
                     "type": "string",
+                    "maxLength": 255,
                     "minLength": 1
                   },
                   "description": {
@@ -505,6 +506,7 @@
                 "properties": {
                   "name": {
                     "type": "string",
+                    "maxLength": 255,
                     "minLength": 1
                   },
                   "description": {
@@ -530,7 +532,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Permission created",
             "content": {
               "application/json": {
@@ -834,7 +836,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "PersonalToken created",
             "content": {
               "application/json": {
@@ -1725,7 +1727,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Role created",
             "content": {
               "application/json": {
@@ -2452,7 +2454,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "User created",
             "content": {
               "application/json": {
@@ -2630,6 +2632,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {
@@ -2666,6 +2669,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {
@@ -2696,6 +2700,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {
@@ -2726,6 +2731,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {
@@ -2756,6 +2762,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {
@@ -3106,6 +3113,7 @@
           },
           "name": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1
           },
           "description": {

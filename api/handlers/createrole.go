@@ -33,7 +33,7 @@ func (s Server) CreateRole(
 	if !ok {
 		return nil, fmt.Errorf("failed to create role: %T", p)
 	}
-	return CreateRole200JSONResponse{
+	return CreateRole201JSONResponse{
 		Id:          perm.ID,
 		Name:        perm.Name,
 		Description: &perm.Description,

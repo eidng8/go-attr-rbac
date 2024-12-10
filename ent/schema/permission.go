@@ -41,6 +41,7 @@ func (Permission) Fields() []ent.Field {
 					&ogen.Schema{
 						Type:      "string",
 						MinLength: &u1,
+						MaxLength: &u255,
 					},
 				),
 			),

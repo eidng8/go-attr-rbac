@@ -43,7 +43,7 @@ func (s Server) CreatePersonalToken(
 	}
 	tt := t.(ut)
 	// TODO change to return JWT token string
-	return CreatePersonalToken200JSONResponse{
+	return CreatePersonalToken201JSONResponse{
 		Id:          tt.token.ID,
 		UserId:      tt.token.UserID,
 		Description: tt.token.Description,

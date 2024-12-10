@@ -12,8 +12,8 @@ import (
 )
 
 func Test_Ping(t *testing.T) {
-	require.Nil(t, os.Setenv(api.PublicOpsName, "ping"))
-	require.Nil(t, os.Setenv(api.PrivateKeyName, buildSecret(32)))
+	require.Nil(t, os.Setenv(api.PublicOpsName, "auth:Ping"))
+	require.Nil(t, os.Setenv(api.PrivateKeyName, randomSecret(32)))
 	_, engine, err := NewEngine(nil)
 	require.Nil(t, err)
 	res := httptest.NewRecorder()

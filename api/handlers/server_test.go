@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"context"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"math/rand/v2"
 	"net/http"
@@ -21,9 +19,6 @@ import (
 	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/enttest"
-	"github.com/eidng8/go-attr-rbac/ent/migrate"
-	"github.com/eidng8/go-attr-rbac/ent/role"
-	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
 const numFixtures = 10
@@ -44,7 +39,7 @@ func setup(tb testing.TB, refresh bool) (
 	api.Log.Debug = true
 	nrd := nil == testdb
 	require.Nil(tb, os.Setenv(api.BaseUrlName, "http://localhost"))
-	require.Nil(tb, os.Setenv(api.PrivateKeyName, buildSecret(32)))
+	require.Nil(tb, os.Setenv(api.PrivateKeyName, randomSecret(32)))
 	require.Nil(tb, os.Setenv(api.PublicOpsName, "ping"))
 	if nrd {
 		// testdb = enttest.Open(
@@ -163,7 +158,7 @@ func (s Server) request(
 	return
 }
 
-func buildSecret(width int) string {
+func randomSecret(width int) string {
 	bytes := make([]byte, width)
 	for i := range width {
 		bytes[i] = byte(rand.UintN(256))
@@ -171,62 +166,10 @@ func buildSecret(width int) string {
 	return base64.StdEncoding.EncodeToString(bytes)
 }
 
-func fixture(tb testing.TB, client *ent.Client) {
-	qc := context.Background()
-	err := client.Schema.Create(
-		qc, migrate.WithDropIndex(true), migrate.WithDropColumn(true),
-		migrate.WithForeignKeys(true),
-	)
-	require.Nil(tb, err)
-	ids := make([]uint32, numFixtures)
-	roles := make([]*ent.RoleCreate, numFixtures)
-	users := make([]*ent.UserCreate, numFixtures)
-	for i := range numFixtures {
-		ids[i] = uint32(i + 1)
-		roles[i] = client.Role.Create().SetName(fmt.Sprintf("role %d", i))
-		users[i] = client.User.Create().SetUsername(fmt.Sprintf("user%d", i)).
-			SetEmail(fmt.Sprintf("email%d@test.com", i)).
-			SetPassword(fmt.Sprintf("password%d", i)).
-			SetAttr(&map[string]interface{}{"dept": i + 1, "level": i + 5})
-	}
-	client.Role.CreateBulk(roles...).SaveX(qc)
-	client.User.CreateBulk(users...).SaveX(qc)
-	client.Role.Update().Where(role.IDEQ(2)).AddPermissionIDs(2, 3, 4).ExecX(qc)
-	client.User.Update().Where(user.IDEQ(2)).AddRoleIDs(2, 3, 4).ExecX(qc)
-}
-
-func getUserById(tb testing.TB, db *ent.Client, id uint64) *ent.User {
-	u, err := db.User.Query().Where(user.IDEQ(id)).Only(context.Background())
-	require.Nil(tb, err)
-	return u
-}
-
-func pluckPermissionId(row *ent.Permission) uint32 { return row.ID }
-
-func pluckRoleId(row *ent.Role) uint32 { return row.ID }
-
-func uuu[T interface{}](
+func unmarshalResponse[T interface{}](
 	tb testing.TB, data T, res *httptest.ResponseRecorder,
 ) T {
 	var v T
-	require.Nil(tb, json.Unmarshal([]byte(res.Body.String()), &v))
+	require.Nil(tb, json.Unmarshal(res.Body.Bytes(), &v))
 	return v
-}
-
-// this test is here for future change on auth & validation middleware, if it
-// were to be made.
-//
-// In current setup, validation middleware is registered with `gin.use()`,
-// which is a router group middleware. While auth middleware is registered
-// using NewStrictHandler, which is an operation (route) middleware.
-// `gin.combineHandlers()` puts all router group middleware before operation
-// middleware. This means that the request will be validated before it is
-// authenticated. This test is here to ensure that this behavior will not go
-// un-noticed if this behavior were changed.
-func Test_authMiddleware_runs_after_request_validation(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
-	req, err := svr.post("/role/3/permissions", nil)
-	require.Nil(t, err)
-	engine.ServeHTTP(res, req)
-	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 }

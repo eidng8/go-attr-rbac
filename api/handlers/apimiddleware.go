@@ -17,6 +17,7 @@ import (
 func (s Server) authMiddleware() StrictMiddlewareFunc {
 	return func(f StrictHandlerFunc, operationID string) StrictHandlerFunc {
 		return func(gc *gin.Context, request interface{}) (interface{}, error) {
+			operationID = qualifyOperation(operationID)
 			if s.isPublicOperation(operationID) {
 				// pass-through public paths
 				return f(gc, request)
@@ -54,9 +55,6 @@ func (s Server) authMiddleware() StrictMiddlewareFunc {
 }
 
 func (s Server) isPublicOperation(operationID string) bool {
-	if !strings.Contains(operationID, "") {
-		operationID = "auth:" + operationID
-	}
 	return slices.Contains(s.publicOperations, operationID)
 }
 
@@ -105,6 +103,15 @@ func (s Server) handleTokenAuth(token string) (*jwtToken, error) {
 		return nil, err
 	}
 	return t, nil
+}
+
+// Checks if the operation has domain qualifier and add the default "auth:"
+// qualifier if not.
+func qualifyOperation(operation string) string {
+	if !strings.Contains(operation, ":") {
+		return "auth:" + operation
+	}
+	return operation
 }
 
 func authHeader(gc *gin.Context) (string, string, error) {

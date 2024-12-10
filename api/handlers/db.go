@@ -2,14 +2,10 @@ package handlers
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"slices"
 
 	"github.com/eidng8/go-utils"
-	"golang.org/x/crypto/argon2"
 
 	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
@@ -20,7 +16,7 @@ import (
 )
 
 // dbSetup makes sure we have a database with at least preliminary data.
-func dbSetup(c *ent.Client, params PasswordHashParams) {
+func dbSetup(c *ent.Client, params utils.PasswordHashParams) {
 	api.Log.Infof("Checking whether database has preliminary data...")
 	qc := context.Background()
 
@@ -35,8 +31,8 @@ func dbSetup(c *ent.Client, params PasswordHashParams) {
 	perms := []string{
 		"auth:RevokeAccessToken",
 		"auth:CheckAccessToken",
-		"auth:RefreshAccessToken",
-		"auth:Login",
+		api.OperationRefreshToken,
+		api.OperationLogin,
 		"auth:Logout",
 		"auth:DeletePermission",
 		"auth:ReadPermission",
@@ -112,7 +108,7 @@ func dbSetup(c *ent.Client, params PasswordHashParams) {
 		// generate a random 32-character password
 		pass, err := utils.RandomPrintable(32)
 		utils.PanicIfError(err)
-		hash, err := hashPassword(pass, params)
+		hash, err := utils.HashPassword(pass, params)
 		utils.PanicIfError(err)
 		u = c.User.Create().SetID(1).SetUsername("root").
 			SetPassword(hash).
@@ -131,16 +127,4 @@ func dbSetup(c *ent.Client, params PasswordHashParams) {
 			break
 		}
 	}
-}
-
-func hashPassword(password string, params PasswordHashParams) (string, error) {
-	salt := make([]byte, 16)
-	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return "", err
-	}
-	hash := argon2.IDKey(
-		[]byte(password), salt,
-		params.Times, params.Memory, params.Threads, params.KeyLen,
-	)
-	return base64.StdEncoding.EncodeToString(hash), nil
 }

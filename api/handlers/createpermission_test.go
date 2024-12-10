@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,8 +19,8 @@ func Test_CreatePermission_creates_a_permission(t *testing.T) {
 	req, err := svr.postAs(u, "/permissions", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, http.StatusOK, res.Code)
-	actual := uuu(t, Permission{}, res)
+	require.Equal(t, http.StatusCreated, res.Code)
+	actual := unmarshalResponse(t, Permission{}, res)
 	require.Equal(t, body.Name, actual.Name)
 	require.Nil(t, body.Description)
 	require.GreaterOrEqual(t, actual.Id, uint32(numFixtures))
@@ -37,7 +39,7 @@ func Test_CreatePermission_creates_a_permission_with_description(t *testing.T) {
 	req, err := svr.postAs(u, "/permissions", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, http.StatusOK, res.Code)
+	require.Equal(t, http.StatusCreated, res.Code)
 	actual := Permission{}
 	require.Nil(t, json.Unmarshal([]byte(res.Body.String()), &actual))
 	require.Equal(t, body.Name, actual.Name)
@@ -91,5 +93,59 @@ func Test_CreatePermission_reports_422_if_no_name(t *testing.T) {
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 422, res.Code)
+	require.Regexp(
+		t, regexp.MustCompile(`\bname\b.*\bminimum\b.*\b1`), res.Body.String(),
+	)
+	require.Equal(t, count, db.Permission.Query().CountX(context.Background()))
+}
+
+func Test_CreatePermission_reports_422_if_name_too_long(t *testing.T) {
+	svr, engine, db, res := setup(t, false)
+	count := db.Permission.Query().CountX(context.Background())
+	u := getUserById(t, db, 1)
+	s := strings.Repeat("a", 256)
+	req, err := svr.postAs(u, "/permissions", CreatePermissionJSONBody{Name: s})
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, 422, res.Code)
+	require.Regexp(
+		t, regexp.MustCompile(`\bname\b.*\bmaximum\b.*\b255`),
+		res.Body.String(),
+	)
+	require.Equal(t, count, db.Permission.Query().CountX(context.Background()))
+}
+
+func Test_CreatePermission_reports_422_if_description_too_long(t *testing.T) {
+	desc := strings.Repeat("a", 256)
+	body := CreatePermissionJSONBody{Name: "test_perm", Description: &desc}
+	svr, engine, db, res := setup(t, false)
+	count := db.Permission.Query().CountX(context.Background())
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/permissions", body)
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, 422, res.Code)
+	require.Regexp(
+		t, regexp.MustCompile(`\bdescription\b.*\bmaximum\b.*\b255`),
+		res.Body.String(),
+	)
+	require.Equal(t, count, db.Permission.Query().CountX(context.Background()))
+}
+
+func Test_CreatePermission_reports_400_if_permission_exists(t *testing.T) {
+	body := CreatePermissionJSONBody{Name: "auth:Login"}
+	svr, engine, db, res := setup(t, false)
+	count := db.Permission.Query().CountX(context.Background())
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/permissions", body)
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, 400, res.Code)
+	expected := map[string]interface{}{
+		"code":   http.StatusBadRequest,
+		"errors": "permission `auth:Login` already exists",
+		"status": "error",
+	}
+	requireJsonEqualsString(t, expected, res.Body.String())
 	require.Equal(t, count, db.Permission.Query().CountX(context.Background()))
 }
