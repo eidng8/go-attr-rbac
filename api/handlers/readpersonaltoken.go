@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/personaltoken"
 )
 
@@ -15,6 +16,9 @@ func (s Server) ReadPersonalToken(
 	token, err := s.db.PersonalToken.Query().
 		Where(personaltoken.ID(request.Id)).First(context.Background())
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ReadPersonalToken404JSONResponse{}, nil
+		}
 		return nil, err
 	}
 	return ReadPersonalToken200JSONResponse{

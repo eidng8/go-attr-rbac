@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
 
@@ -14,6 +15,9 @@ func (s Server) ReadPermission(
 ) (ReadPermissionResponseObject, error) {
 	p, err := s.db.Permission.Query().Where(permission.ID(request.Id)).Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return ReadPermission404JSONResponse{}, nil
+		}
 		return nil, err
 	}
 	return ReadPermission200JSONResponse{
