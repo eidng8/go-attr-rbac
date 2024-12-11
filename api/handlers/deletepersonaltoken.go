@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/eidng8/go-attr-rbac/ent"
 )
@@ -10,15 +11,25 @@ import (
 //
 // Endpoint: DELETE /personal-token/:id
 func (s Server) DeletePersonalToken(
-	ctx context.Context, request DeletePersonalTokenRequestObject,
+	_ context.Context, request DeletePersonalTokenRequestObject,
 ) (DeletePersonalTokenResponseObject, error) {
 	_, err := s.db.Transaction(
 		context.Background(),
-		func(ctx context.Context, tx *ent.Tx) (interface{}, error) {
-			return nil, tx.PersonalToken.DeleteOneID(request.Id).Exec(ctx)
+		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
+			return nil, tx.PersonalToken.DeleteOneID(request.Id).Exec(qc)
 		},
 	)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			var s interface{} = "not found"
+			return DeletePersonalToken404JSONResponse{
+				N404JSONResponse: N404JSONResponse{
+					Code:   http.StatusNotFound,
+					Status: "error",
+					Errors: &s,
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	return DeletePersonalToken204Response{}, nil

@@ -51,7 +51,7 @@ func (User) Fields() []ent.Field {
 						},
 					),
 				),
-			field.String("email").Optional().Unique().Annotations(
+			field.String("email").Optional().Nillable().Unique().Annotations(
 				entoas.Schema(
 					&ogen.Schema{
 						Type:   "string",

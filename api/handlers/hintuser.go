@@ -28,11 +28,13 @@ func (s Server) HintUsers(
 	}
 	list := make(HintUsers200JSONResponse, len(rows))
 	for i, row := range rows {
-		email := types.Email(row.Email)
 		list[i] = UserList{
 			Id:       row.ID,
 			Username: row.Username,
-			Email:    &email,
+		}
+		if nil != row.Email && "" != *row.Email {
+			email := types.Email(*row.Email)
+			list[i].Email = &email
 		}
 	}
 	return list, nil

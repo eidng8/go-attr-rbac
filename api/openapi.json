@@ -804,31 +804,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": {
-                    "type": "integer",
-                    "format": "uint64",
-                    "minimum": 1
-                  },
                   "description": {
                     "type": "string",
                     "format": "uint64",
                     "maxLength": 255,
                     "minLength": 2
                   },
-                  "created_at": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "owner": {
+                  "ttl": {
+                    "description": "Time to live in seconds",
                     "type": "integer",
-                    "format": "uint64",
-                    "minimum": 1
+                    "format": "uint32",
+                    "minimum": 3600
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "additionalProperties": false,
                 "required": [
-                  "user_id",
-                  "description"
+                  "description",
+                  "scopes",
+                  "ttl"
                 ]
               }
             }
@@ -2419,34 +2418,17 @@
                       "minimum": 1
                     }
                   },
-                  "access_tokens": {
-                    "type": "array",
-                    "items": {
-                      "type": "integer",
-                      "format": "uint64",
-                      "minimum": 1
-                    }
-                  },
-                  "refresh_tokens": {
-                    "type": "array",
-                    "items": {
-                      "type": "integer",
-                      "format": "uint64",
-                      "minimum": 1
-                    }
-                  },
-                  "personal_tokens": {
-                    "type": "array",
-                    "items": {
-                      "type": "integer",
-                      "format": "uint64",
-                      "minimum": 1
-                    }
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 72,
+                    "minLength": 8
                   }
                 },
                 "additionalProperties": false,
                 "required": [
-                  "username"
+                  "username",
+                  "password"
                 ]
               }
             }
@@ -2838,12 +2820,16 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "token": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "user_id",
-          "description"
+          "description",
+          "token"
         ]
       },
       "PersonalTokenList": {

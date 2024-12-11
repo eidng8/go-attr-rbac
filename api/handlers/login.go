@@ -23,9 +23,8 @@ func (s Server) Login(
 ) (LoginResponseObject, error) {
 	// check user credentials
 	qc := context.Background()
-	cols := append([]string{user.FieldPassword}, user.Columns...)
 	u, err := s.db.User.Query().Where(user.UsernameEQ(req.Body.Username)).
-		Select(cols...).Only(qc)
+		Only(qc)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return Login401JSONResponse{
@@ -50,7 +49,6 @@ func (s Server) Login(
 			},
 		}, nil
 	}
-	email := types.Email(u.Email)
 
 	// generate access token and refresh token
 	at, err := s.issueAccessToken(u)
@@ -69,11 +67,15 @@ func (s Server) Login(
 	}
 	s.setToken(gc, at, rt)
 
-	return Login200JSONResponse{
+	res := Login200JSONResponse{
 		Id:        u.ID,
 		Username:  u.Username,
-		Email:     &email,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
-	}, nil
+	}
+	if nil != u.Email && "" != *u.Email {
+		email := types.Email(*u.Email)
+		res.Email = &email
+	}
+	return res, nil
 }

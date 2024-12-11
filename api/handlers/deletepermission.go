@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/eidng8/go-attr-rbac/ent"
 )
@@ -15,13 +16,20 @@ func (s Server) DeletePermission(
 	_, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
-			if e := tx.Permission.DeleteOneID(request.Id).Exec(ctx); e != nil {
-				return nil, e
-			}
-			return nil, nil
+			return nil, tx.Permission.DeleteOneID(request.Id).Exec(ctx)
 		},
 	)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			var s interface{} = "not found"
+			return DeletePermission404JSONResponse{
+				N404JSONResponse: N404JSONResponse{
+					Code:   http.StatusNotFound,
+					Status: "error",
+					Errors: &s,
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	return DeletePermission204Response{}, nil

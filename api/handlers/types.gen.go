@@ -78,6 +78,7 @@ type PersonalTokenCreate struct {
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	Description string     `json:"description"`
 	Id          uint64     `json:"id"`
+	Token       string     `json:"token"`
 	UserId      uint64     `json:"user_id"`
 }
 
@@ -338,10 +339,11 @@ type ListPersonalTokenParams struct {
 
 // CreatePersonalTokenJSONBody defines parameters for CreatePersonalToken.
 type CreatePersonalTokenJSONBody struct {
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	Description string     `json:"description"`
-	Owner       *uint64    `json:"owner,omitempty"`
-	UserId      uint64     `json:"user_id"`
+	Description string   `json:"description"`
+	Scopes      []string `json:"scopes"`
+
+	// Ttl Time to live in seconds
+	Ttl uint32 `json:"ttl"`
 }
 
 // HintPermissionsParams defines parameters for HintPermissions.
@@ -462,16 +464,14 @@ type ListUserParams struct {
 
 // CreateUserJSONBody defines parameters for CreateUser.
 type CreateUserJSONBody struct {
-	AccessTokens *[]uint64 `json:"access_tokens,omitempty"`
-	Attr         *struct {
+	Attr *struct {
 		Dept  uint32 `json:"dept"`
 		Level uint8  `json:"level"`
 	} `json:"attr,omitempty"`
-	Email          *openapi_types.Email `json:"email,omitempty"`
-	PersonalTokens *[]uint64            `json:"personal_tokens,omitempty"`
-	RefreshTokens  *[]uint64            `json:"refresh_tokens,omitempty"`
-	Roles          *[]uint32            `json:"roles,omitempty"`
-	Username       string               `json:"username"`
+	Email    *openapi_types.Email `json:"email,omitempty"`
+	Password string               `json:"password"`
+	Roles    *[]uint32            `json:"roles,omitempty"`
+	Username string               `json:"username"`
 }
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.

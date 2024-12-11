@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/eidng8/go-utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
@@ -44,6 +45,9 @@ type accessTokenClaims struct {
 	Scopes *[]string               `json:"scopes,omitempty"`
 }
 
+// Returns the roles from the JWT token. It does NOT access the database, just
+// reads roles from the token's claims. To actually get roles from database,
+// use the user field directly.
 func (tk *jwtToken) getRoles() (*[]string, error) {
 	claims, ok := tk.token.Claims.(jwt.MapClaims)
 	if !ok {
@@ -53,14 +57,27 @@ func (tk *jwtToken) getRoles() (*[]string, error) {
 	if !ok {
 		return nil, errInvalidToken
 	}
-	roles := make([]string, len(is))
-	for i, r := range is {
-		roles[i], ok = r.(string)
-		if !ok {
-			return nil, errInvalidToken
-		}
+	roles, err := utils.SliceMapFunc(is, utils.MapToType[string])
+	if err != nil {
+		return nil, err
 	}
 	return &roles, nil
+}
+
+func (tk *jwtToken) getScopes() (*[]string, error) {
+	claims, ok := tk.token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errInvalidToken
+	}
+	is, ok := claims["scopes"].([]interface{})
+	if !ok {
+		return nil, errInvalidToken
+	}
+	scopes, err := utils.SliceMapFunc(is, utils.MapToType[string])
+	if err != nil {
+		return nil, err
+	}
+	return &scopes, nil
 }
 
 func (tk *jwtToken) getAttr() (*map[string]interface{}, error) {
@@ -87,22 +104,22 @@ func (tk *jwtToken) getAttr() (*map[string]interface{}, error) {
 	return &attr, nil
 }
 
-// getJti returns the token's uuid from JTI.
+// Returns the token's uuid from JTI.
 // Doesn't access database. Doesn't log errors.
-func (tk *jwtToken) getJti() (uuid.UUID, error) {
+func (tk *jwtToken) getJti() (*uuid.UUID, error) {
 	claims, ok := tk.token.Claims.(jwt.MapClaims)
 	if !ok {
-		return uuid.Nil, errInvalidToken
+		return nil, errInvalidToken
 	}
 	jti, ok := claims["jti"].(string)
 	if !ok {
-		return uuid.Nil, errInvalidToken
+		return nil, errInvalidToken
 	}
 	id, err := uuid.Parse(jti)
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 // getJtiBinary returns the token's uuid from JTI, as binary.
@@ -153,6 +170,7 @@ func (tk *jwtToken) getUserBySubject() error {
 // * must iss claim match the server domain.
 // Doesn't access database. Doesn't log errors.
 func (tk *jwtToken) parse(token string) error {
+	// TODO enhance the key func
 	t, err := jwt.Parse(
 		token, tk.svr.getSecret, jwt.WithJSONNumber(),
 		jwt.WithExpirationRequired(), jwt.WithIssuer(tk.svr.Domain()),

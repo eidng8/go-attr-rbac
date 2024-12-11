@@ -30,12 +30,15 @@ func (s Server) UpdateUser(
 		return nil, err
 	}
 	u := r.(*ent.User)
-	email := types.Email(u.Email)
-	return UpdateUser200JSONResponse{
+	res := UpdateUser200JSONResponse{
 		Id:        u.ID,
 		Username:  u.Username,
-		Email:     &email,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
-	}, nil
+	}
+	if nil != u.Email && "" != *u.Email {
+		email := types.Email(*u.Email)
+		res.Email = &email
+	}
+	return res, nil
 }

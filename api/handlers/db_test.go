@@ -37,6 +37,7 @@ func fixture(tb testing.TB, client *ent.Client) {
 	client.User.Update().Where(user.IDEQ(2)).AddRoleIDs(2, 3, 4).ExecX(qc)
 }
 
+// Gets the user from database. Does NOT eagerly load anything.
 func getUserById(tb testing.TB, db *ent.Client, id uint64) *ent.User {
 	u, err := db.User.Query().Where(user.IDEQ(id)).Only(context.Background())
 	require.Nil(tb, err)

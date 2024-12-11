@@ -23,7 +23,7 @@ func Test_CreatePermission_creates_a_permission(t *testing.T) {
 	actual := unmarshalResponse(t, Permission{}, res)
 	require.Equal(t, body.Name, actual.Name)
 	require.Nil(t, body.Description)
-	require.GreaterOrEqual(t, actual.Id, uint32(numFixtures))
+	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
 	row := db.Permission.Query().Where(permission.NameEQ(body.Name)).
 		Where(permission.DescriptionIsNil()).
@@ -44,7 +44,7 @@ func Test_CreatePermission_creates_a_permission_with_description(t *testing.T) {
 	require.Nil(t, json.Unmarshal([]byte(res.Body.String()), &actual))
 	require.Equal(t, body.Name, actual.Name)
 	require.Equal(t, body.Description, actual.Description)
-	require.GreaterOrEqual(t, actual.Id, uint32(numFixtures))
+	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
 	row := db.Permission.Query().Where(permission.NameEQ(body.Name)).
 		Where(permission.DescriptionEQ(*body.Description)).

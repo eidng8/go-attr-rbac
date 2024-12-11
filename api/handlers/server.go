@@ -143,4 +143,12 @@ func (s Server) setToken(gc *gin.Context, accessToken, refreshToken string) {
 	)
 }
 
+func (s Server) getToken(gc *gin.Context) (*jwtToken, error) {
+	token, ok := gc.Value(accessTokenName).(*jwtToken)
+	if !ok {
+		return nil, errInvalidContext
+	}
+	return token, nil
+}
+
 var _ StrictServerInterface = (*Server)(nil)

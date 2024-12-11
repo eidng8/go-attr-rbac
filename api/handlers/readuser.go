@@ -23,13 +23,16 @@ func (s Server) ReadUser(
 	if err != nil {
 		return nil, err
 	}
-	email := types.Email(u.Email)
-	return ReadUser200JSONResponse{
+	res := ReadUser200JSONResponse{
 		Id:        u.ID,
 		Username:  u.Username,
-		Email:     &email,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 		DeletedAt: u.DeletedAt,
-	}, nil
+	}
+	if nil != u.Email && "" != *u.Email {
+		email := types.Email(*u.Email)
+		res.Email = &email
+	}
+	return res, nil
 }

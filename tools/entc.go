@@ -81,6 +81,7 @@ func newOasExtension() (*entoas.Extension, error) {
 				if err != nil {
 					return err
 				}
+				fixComponents(s)
 				fixResponses(s)
 				addPingPath(s)
 				return nil
@@ -263,7 +264,22 @@ func constraintRequestBody(paths ogen.Paths) {
 					continue
 				}
 				b := false
-				param.Schema.AdditionalProperties = &ogen.AdditionalProperties{Bool: &b}
+				param.Schema.AdditionalProperties =
+					&ogen.AdditionalProperties{Bool: &b}
+				if nil != param.Schema.Properties {
+					for _, f := range []string{
+						"created_at", "updated_at", "deleted_at",
+					} {
+						if i, _ := findPropertyByName(
+							param.Schema.Properties, f,
+						); i >= 0 {
+							param.Schema.Properties = append(
+								param.Schema.Properties[:i],
+								param.Schema.Properties[i+1:]...,
+							)
+						}
+					}
+				}
 			}
 		}
 	}
@@ -284,6 +300,16 @@ func findParamByName(Params []*ogen.Parameter, name string) *ogen.Parameter {
 	return nil
 }
 
+func fixComponents(spec *ogen.Spec) {
+	spec.Components.Schemas["PersonalTokenCreate"].Properties =
+		append(
+			spec.Components.Schemas["PersonalTokenCreate"].Properties,
+			ogen.Property{Name: "token", Schema: &ogen.Schema{Type: "string"}},
+		)
+	spec.Components.Schemas["PersonalTokenCreate"].Required =
+		append(spec.Components.Schemas["PersonalTokenCreate"].Required, "token")
+}
+
 func fixPaths(spec *ogen.Spec) {
 	spec.Paths["/permission/{id}"] = spec.Paths["/permissions/{id}"]
 	delete(spec.Paths, "/permissions/{id}")
@@ -301,6 +327,8 @@ func fixPaths(spec *ogen.Spec) {
 	delete(spec.Paths, "/users/{id}/roles")
 
 	u2 := uint64(2)
+	u8 := uint64(8)
+	u72 := uint64(72)
 	u255 := uint64(255)
 	spec.Paths["/permission/{id}"].Get.AddParameters(
 		&ogen.Parameter{
@@ -368,6 +396,29 @@ func fixPaths(spec *ogen.Spec) {
 		spec.Paths["/user/{id}/roles"].Get,
 		"Paginated list of attached user roles", userRolesListRef,
 	)
+	ps := spec.Paths["/users"].Post.RequestBody.Content["application/json"]
+	for _, prop := range []string{
+		"access_tokens", "refresh_tokens", "personal_tokens",
+	} {
+		i, _ := findPropertyByName(ps.Schema.Properties, prop)
+		if i > -1 {
+			ps.Schema.Properties = append(
+				ps.Schema.Properties[:i], ps.Schema.Properties[i+1:]...,
+			)
+		}
+	}
+	ps.Schema.Properties = append(
+		ps.Schema.Properties, ogen.Property{
+			Name: "password",
+			Schema: &ogen.Schema{
+				Type:      "string",
+				Format:    "password",
+				MinLength: &u8,
+				MaxLength: &u72,
+			},
+		},
+	)
+	ps.Schema.Required = append(ps.Schema.Required, "password")
 }
 
 func fixResponses(spec *ogen.Spec) {
@@ -469,6 +520,31 @@ func fixTokenPaths(spec *ogen.Spec) {
 	spec.Paths["/access-token"].Delete.Responses["204"].
 		SetDescription("Successfully revoked access token")
 	spec.Paths["/personal-token/{id}"].SetPatch(nil)
+	sch := spec.Paths["/personal-tokens"].Post.RequestBody.
+		Content["application/json"].Schema
+	sch.Required = []string{"description", "scopes", "ttl"}
+	i, _ := findPropertyByName(sch.Properties, "owner")
+	sch.Properties = append(sch.Properties[:i], sch.Properties[i+1:]...)
+	i, _ = findPropertyByName(sch.Properties, "user_id")
+	sch.Properties = append(sch.Properties[:i], sch.Properties[i+1:]...)
+	sch.Properties = append(
+		sch.Properties,
+		ogen.Property{
+			Name: "ttl",
+			Schema: &ogen.Schema{
+				Type: "integer", Format: "uint32", Minimum: ogen.Num("3600"),
+				Description: "Time to live in seconds",
+			},
+		},
+		ogen.Property{
+			Name: "scopes",
+			Schema: &ogen.Schema{
+				Type: "array", Items: &ogen.Items{
+					Item: &ogen.Schema{Type: "string"},
+				},
+			},
+		},
+	)
 	spec.Paths["/login"] = &ogen.PathItem{
 		Post: &ogen.Operation{
 			Summary:     "Login",
@@ -511,6 +587,17 @@ func fixTokenPaths(spec *ogen.Spec) {
 			},
 		},
 	}
+}
+
+func findPropertyByName(props []ogen.Property, name string) (
+	int, *ogen.Property,
+) {
+	for i, prop := range props {
+		if prop.Name == name {
+			return i, &prop
+		}
+	}
+	return -1, nil
 }
 
 func nameParam(subject string) *ogen.Parameter {

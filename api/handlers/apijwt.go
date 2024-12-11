@@ -26,10 +26,19 @@ func (s Server) issueRefreshToken(user *ent.User) (string, error) {
 	return s.issueJwtToken(user, 7*24*time.Hour)
 }
 
-func (s Server) issuePersonalToken(user *ent.User, scopes string) (
-	string, error,
-) {
-	return s.issueJwtToken(user, 7*24*time.Hour)
+func (s Server) issuePersonalToken(
+	user *ent.User, scopes []string, ttl time.Duration,
+) (*uuid.UUID, string, error) {
+	uid, claims, err := s.buildTokenClaims(user, ttl)
+	if err != nil {
+		return nil, "", err
+	}
+	claims.Scopes = &scopes
+	token, err := s.issueJwtTokenWithClaims(jwt.SigningMethodHS256, claims)
+	if err != nil {
+		return nil, "", err
+	}
+	return uid, token, nil
 }
 
 // issueAccessToken issues an access token for the user.
@@ -37,7 +46,7 @@ func (s Server) issuePersonalToken(user *ent.User, scopes string) (
 func (s Server) issueJwtToken(user *ent.User, ttl time.Duration) (
 	string, error,
 ) {
-	claims, err := s.buildTokenClaims(user, ttl)
+	_, claims, err := s.buildTokenClaims(user, ttl)
 	if err != nil {
 		return "", err
 	}
@@ -56,16 +65,16 @@ func (s Server) issueJwtTokenWithClaims(
 }
 
 func (s Server) buildTokenClaims(user *ent.User, ttl time.Duration) (
-	*accessTokenClaims, error,
+	*uuid.UUID, *accessTokenClaims, error,
 ) {
 	if user == nil {
-		return nil, errInvalidArgument
+		return nil, nil, errInvalidArgument
 	}
 	var roles *[]string = nil
 	var attr *map[string]interface{} = nil
 	uid, err := uuid.NewV7()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if user.Edges.Roles != nil {
 		attr = user.Attr
@@ -74,7 +83,7 @@ func (s Server) buildTokenClaims(user *ent.User, ttl time.Duration) (
 		)
 		roles = &r
 	}
-	return &accessTokenClaims{
+	return &uid, &accessTokenClaims{
 		Roles: roles,
 		Attr:  attr,
 		RegisteredClaims: jwt.RegisteredClaims{

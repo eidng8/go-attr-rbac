@@ -36,7 +36,7 @@ func Test_AssignPermissions_reports_422_if_permission_is_empty(t *testing.T) {
 	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 }
 
-func Test_AssignPermissions_denies_non_user(t *testing.T) {
+func Test_AssignPermissions_returns_401_if_non_user(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
 	rows := db.Permission.Query().Select(permission.FieldID).Limit(3).
 		Order(permission.ByID()).AllX(context.Background())
@@ -50,7 +50,7 @@ func Test_AssignPermissions_denies_non_user(t *testing.T) {
 	require.False(t, ex)
 }
 
-func Test_AssignPermissions_denies_user_without_permission(t *testing.T) {
+func Test_AssignPermissions_returns_403_if_user_without_permission(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
 	rows := db.Permission.Query().Select(permission.FieldID).Limit(3).
 		Order(permission.ByID()).AllX(context.Background())

@@ -12,7 +12,7 @@ import (
 //
 // Endpoint: POST /permissions
 func (s Server) CreatePermission(
-	ctx context.Context, request CreatePermissionRequestObject,
+	_ context.Context, request CreatePermissionRequestObject,
 ) (CreatePermissionResponseObject, error) {
 	p, err := s.db.Transaction(
 		context.Background(),
@@ -21,7 +21,7 @@ func (s Server) CreatePermission(
 			if request.Body.Description != nil {
 				create.SetDescription(*request.Body.Description)
 			}
-			return create.Save(ctx)
+			return create.Save(qc)
 		},
 	)
 	if err != nil {

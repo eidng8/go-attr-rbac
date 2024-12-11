@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/eidng8/go-ent/softdelete"
 
@@ -12,19 +13,27 @@ import (
 //
 // Endpoint: DELETE /user/{id}
 func (s Server) DeleteUser(
-	ctx context.Context, request DeleteUserRequestObject,
+	_ context.Context, request DeleteUserRequestObject,
 ) (DeleteUserResponseObject, error) {
 	_, err := s.db.Transaction(
-		context.Background(),
-		func(ctx context.Context, tx *ent.Tx) (interface{}, error) {
-			return nil, tx.User.DeleteOneID(request.Id).Exec(
-				softdelete.NewSoftDeleteQueryContext(
-					request.Params.Trashed, context.Background(),
-				),
-			)
+		softdelete.NewSoftDeleteQueryContext(
+			request.Params.Trashed, context.Background(),
+		),
+		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
+			return nil, tx.User.DeleteOneID(request.Id).Exec(qc)
 		},
 	)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			var s interface{} = "not found"
+			return DeleteUser404JSONResponse{
+				N404JSONResponse: N404JSONResponse{
+					Code:   http.StatusNotFound,
+					Status: "error",
+					Errors: &s,
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	return DeleteUser204Response{}, nil

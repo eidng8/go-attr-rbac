@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"slices"
 
@@ -105,10 +106,11 @@ func dbSetup(c *ent.Client, params utils.PasswordHashParams) {
 	// make sure root user exists and has root role
 	u := c.User.Query().Where(user.IDEQ(1)).FirstX(qc)
 	if nil == u {
-		// generate a random 32-character password
-		pass, err := utils.RandomPrintable(32)
+		// generate a random 32-byte password that may not be printable
+		pass := make([]byte, 32)
+		_, err := rand.Read(pass)
 		utils.PanicIfError(err)
-		hash, err := utils.HashPassword(pass, params)
+		hash, err := utils.HashPassword(string(pass))
 		utils.PanicIfError(err)
 		u = c.User.Create().SetID(1).SetUsername("root").
 			SetPassword(hash).
@@ -117,14 +119,5 @@ func dbSetup(c *ent.Client, params utils.PasswordHashParams) {
 	}
 	if !u.QueryRoles().Where(role.IDEQ(1)).ExistX(qc) {
 		u.Update().AddRoleIDs(1).ExecX(qc)
-	}
-
-	// makes the password column completely hidden, explicit select must be used
-	// to get the password
-	for i, f := range user.Columns {
-		if user.FieldPassword == f {
-			user.Columns = slices.Delete(user.Columns, i, i+1)
-			break
-		}
 	}
 }
