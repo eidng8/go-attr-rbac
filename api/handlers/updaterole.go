@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/eidng8/go-attr-rbac/ent"
 )
@@ -10,22 +11,52 @@ import (
 //
 // Endpoint: PATCH /role/{id}
 func (s Server) UpdateRole(
-	ctx context.Context, request UpdateRoleRequestObject,
+	_ context.Context, request UpdateRoleRequestObject,
 ) (UpdateRoleResponseObject, error) {
+	if nil == request.Body.Name && nil == request.Body.Description &&
+		(nil == request.Body.Permissions || len(*request.Body.Permissions) == 0) &&
+		(nil == request.Body.Users || len(*request.Body.Users) == 0) {
+		var s interface{} = "empty request"
+		return UpdateRole400JSONResponse{
+			N400JSONResponse: N400JSONResponse{
+				Code:   http.StatusBadRequest,
+				Status: "error",
+				Errors: &s,
+			},
+		}, nil
+	}
 	r, err := s.db.Transaction(
 		context.Background(),
-		func(ctx context.Context, tx *ent.Tx) (interface{}, error) {
-			r, err := tx.Role.UpdateOneID(request.Id).
-				SetName(*request.Body.Name).
-				SetDescription(*request.Body.Description).
-				Save(ctx)
-			if err != nil {
-				return nil, err
+		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
+			r := tx.Role.UpdateOneID(request.Id)
+			if request.Body.Name != nil {
+				r.SetName(*request.Body.Name)
 			}
-			return r, nil
+			if request.Body.Description != nil {
+				r.SetDescription(*request.Body.Description)
+			}
+			if request.Body.Permissions != nil && len(*request.Body.Permissions) > 0 {
+				r.ClearPermissions()
+				r.AddPermissionIDs(*request.Body.Permissions...)
+			}
+			if request.Body.Users != nil && len(*request.Body.Users) > 0 {
+				r.ClearUsers()
+				r.AddUserIDs(*request.Body.Users...)
+			}
+			return r.Save(qc)
 		},
 	)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			var s interface{} = "not found"
+			return UpdateRole404JSONResponse{
+				N404JSONResponse: N404JSONResponse{
+					Code:   http.StatusNotFound,
+					Status: "error",
+					Errors: &s,
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	ro := r.(*ent.Role)

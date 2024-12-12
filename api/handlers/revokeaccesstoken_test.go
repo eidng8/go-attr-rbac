@@ -1,0 +1,154 @@
+package handlers
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/eidng8/go-utils"
+	"github.com/stretchr/testify/require"
+
+	"github.com/eidng8/go-attr-rbac/api"
+	"github.com/eidng8/go-attr-rbac/ent/accesstoken"
+)
+
+func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
+	svr, engine, db, res := setup(t, true)
+	u := getUserById(t, db, 1)
+	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
+	require.Nil(t, err)
+	var at, rt string
+	at, err = svr.issueAccessToken(u)
+	require.Nil(t, err)
+	req.AddCookie(
+		&http.Cookie{
+			Name:     accessTokenName,
+			Value:    at,
+			Path:     "/",
+			Domain:   svr.Domain(),
+			MaxAge:   3600,
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		},
+	)
+	rt, err = svr.issueRefreshToken(u)
+	require.Nil(t, err)
+	req.AddCookie(
+		&http.Cookie{
+			Name:     refreshTokenName,
+			Value:    rt,
+			Path:     api.RefreshTokenPath,
+			Domain:   svr.Domain(),
+			MaxAge:   86400,
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		},
+	)
+	engine.ServeHTTP(res, req)
+	// check response headers
+	require.Equal(t, http.StatusNoContent, res.Code)
+	cookies, err := utils.SliceMapFunc(
+		res.Header().Values("Set-Cookie"),
+		func(c string) (*http.Cookie, error) { return http.ParseSetCookie(c) },
+	)
+	require.Nil(t, err)
+	cat := utils.SliceFindFunc(
+		cookies, func(c *http.Cookie) bool { return accessTokenName == c.Name },
+	)
+	require.NotNil(t, cat)
+	require.Equal(t, "", cat.Value)
+	require.Equal(t, "/", cat.Path)
+	require.Equal(t, -1, cat.MaxAge)
+	require.Equal(t, http.SameSiteStrictMode, cat.SameSite)
+	require.True(t, cat.HttpOnly)
+	require.True(t, cat.Secure)
+	crt := utils.SliceFindFunc(
+		cookies,
+		func(c *http.Cookie) bool { return refreshTokenName == c.Name },
+	)
+	require.NotNil(t, crt)
+	require.Equal(t, "", crt.Value)
+	require.Equal(t, api.RefreshTokenPath, crt.Path)
+	require.Equal(t, -1, crt.MaxAge)
+	require.Equal(t, http.SameSiteStrictMode, crt.SameSite)
+	require.True(t, crt.HttpOnly)
+	require.True(t, crt.Secure)
+	// check database black list
+	jwtas, err := svr.jwtTokenFromString(at)
+	require.Nil(t, err)
+	jwtab, err := jwtas.getJtiBinary()
+	require.Nil(t, err)
+	jwtrs, err := svr.jwtTokenFromString(rt)
+	require.Nil(t, err)
+	jwtrb, err := jwtrs.getJtiBinary()
+	require.Nil(t, err)
+	require.True(
+		t,
+		db.AccessToken.Query().Where(accesstoken.UserIDEQ(u.ID)).
+			Where(accesstoken.AccessTokenEQ(jwtab)).
+			Where(accesstoken.RefreshTokenEQ(jwtrb)).
+			ExistX(context.Background()),
+	)
+	// make sure revoked tokens can't be used again
+	reqc, err := http.NewRequest(http.MethodGet, "/access-token", nil)
+	require.Nil(t, err)
+	reqc.AddCookie(
+		&http.Cookie{
+			Name:     accessTokenName,
+			Value:    at,
+			Path:     "/",
+			Domain:   svr.Domain(),
+			MaxAge:   3600,
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		},
+	)
+	reqc.AddCookie(
+		&http.Cookie{
+			Name:     refreshTokenName,
+			Value:    rt,
+			Path:     api.RefreshTokenPath,
+			Domain:   svr.Domain(),
+			MaxAge:   86400,
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		},
+	)
+	resc := httptest.NewRecorder()
+	engine.ServeHTTP(resc, reqc)
+	require.Equal(t, http.StatusUnauthorized, resc.Code)
+}
+
+func Test_RevokeAccessToken_returns_401_if_invalid_access_token(t *testing.T) {
+	svr, engine, _, res := setup(t, true)
+	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
+	require.Nil(t, err)
+	req.AddCookie(
+		&http.Cookie{
+			Name:     accessTokenName,
+			Value:    "invalid token",
+			Path:     "/",
+			Domain:   svr.Domain(),
+			MaxAge:   3600,
+			Secure:   true,
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		},
+	)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+}
+
+func Test_RevokeAccessToken_returns_401_if_invalid_context(t *testing.T) {
+	svr, _, _, _ := setup(t, false)
+	res, err := svr.RevokeAccessToken(
+		context.Background(), RevokeAccessTokenRequestObject{},
+	)
+	require.Nil(t, err)
+	require.IsType(t, RevokeAccessToken401JSONResponse{}, res)
+}

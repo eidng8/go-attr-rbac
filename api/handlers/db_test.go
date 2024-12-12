@@ -25,7 +25,8 @@ func fixture(tb testing.TB, client *ent.Client) {
 	users := make([]*ent.UserCreate, numFixtures)
 	for i := range numFixtures {
 		ids[i] = uint32(i + 1)
-		roles[i] = client.Role.Create().SetName(fmt.Sprintf("role %d", i))
+		roles[i] = client.Role.Create().SetName(fmt.Sprintf("role %d", i)).
+			SetDescription(fmt.Sprintf("role %d description", i))
 		users[i] = client.User.Create().SetUsername(fmt.Sprintf("user%d", i)).
 			SetEmail(fmt.Sprintf("email%d@test.com", i)).
 			SetPassword(fmt.Sprintf("password%d", i)).

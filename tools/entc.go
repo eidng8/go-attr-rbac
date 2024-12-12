@@ -397,16 +397,7 @@ func fixPaths(spec *ogen.Spec) {
 		"Paginated list of attached user roles", userRolesListRef,
 	)
 	ps := spec.Paths["/users"].Post.RequestBody.Content["application/json"]
-	for _, prop := range []string{
-		"access_tokens", "refresh_tokens", "personal_tokens",
-	} {
-		i, _ := findPropertyByName(ps.Schema.Properties, prop)
-		if i > -1 {
-			ps.Schema.Properties = append(
-				ps.Schema.Properties[:i], ps.Schema.Properties[i+1:]...,
-			)
-		}
-	}
+	removeTokensFromRequestBody(&ps)
 	ps.Schema.Properties = append(
 		ps.Schema.Properties, ogen.Property{
 			Name: "password",
@@ -419,6 +410,8 @@ func fixPaths(spec *ogen.Spec) {
 		},
 	)
 	ps.Schema.Required = append(ps.Schema.Required, "password")
+	ps = spec.Paths["/user/{id}"].Patch.RequestBody.Content["application/json"]
+	removeTokensFromRequestBody(&ps)
 }
 
 func fixResponses(spec *ogen.Spec) {
@@ -613,5 +606,18 @@ func nameParam(subject string) *ogen.Parameter {
 			MinLength: &u2,
 			MaxLength: &u255,
 		},
+	}
+}
+
+func removeTokensFromRequestBody(ps *ogen.Media) {
+	for _, prop := range []string{
+		"access_tokens", "refresh_tokens", "personal_tokens",
+	} {
+		i, _ := findPropertyByName(ps.Schema.Properties, prop)
+		if i > -1 {
+			ps.Schema.Properties = append(
+				ps.Schema.Properties[:i], ps.Schema.Properties[i+1:]...,
+			)
+		}
 	}
 }

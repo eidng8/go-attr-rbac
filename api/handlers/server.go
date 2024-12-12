@@ -94,7 +94,8 @@ func newSwaggerServer(engine *gin.Engine) *openapi3.T {
 				ErrorHandler: func(
 					c *gin.Context, message string, statusCode int,
 				) {
-					if http.StatusBadRequest == statusCode {
+					if http.StatusBadRequest == statusCode &&
+						strings.HasPrefix(message, "error in openapi3filter.") {
 						message, _ = strings.CutPrefix(
 							message, "error in openapi3filter.",
 						)

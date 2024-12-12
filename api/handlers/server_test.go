@@ -91,7 +91,7 @@ func (s Server) patch(url string, body interface{}) (*http.Request, error) {
 func (s Server) patchAs(usr *ent.User, url string, body interface{}) (
 	*http.Request, error,
 ) {
-	return s.request(usr, http.MethodPut, url, body)
+	return s.request(usr, http.MethodPatch, url, body)
 }
 
 func (s Server) delete(url string) (*http.Request, error) {

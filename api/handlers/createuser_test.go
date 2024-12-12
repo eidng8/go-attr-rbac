@@ -85,10 +85,8 @@ func Test_CreateUser_creates_a_user_with_roles(t *testing.T) {
 
 func Test_CreateUser_creates_a_user_with_attr(t *testing.T) {
 	body := CreateUserJSONBody{
-		Username: "test_user", Password: "Abcd_1234", Attr: &struct {
-			Dept  uint32 `json:"dept"`
-			Level uint8  `json:"level"`
-		}{Dept: 321, Level: 123},
+		Username: "test_user", Password: "Abcd_1234",
+		Attr: userAttrOf(321, 123),
 	}
 	svr, engine, db, res := setup(t, true)
 	u := getUserById(t, db, 1)

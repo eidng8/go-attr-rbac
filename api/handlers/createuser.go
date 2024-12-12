@@ -61,10 +61,7 @@ func (s Server) CreateUser(
 				create.AddRoles(roles...)
 			}
 			if request.Body.Attr != nil {
-				attr := make(map[string]interface{}, 2)
-				attr["dept"] = request.Body.Attr.Dept
-				attr["level"] = request.Body.Attr.Level
-				create.SetAttr(&attr)
+				create.SetAttr(userAttrToMap(*request.Body.Attr))
 			}
 			return create.Save(ctx)
 		},

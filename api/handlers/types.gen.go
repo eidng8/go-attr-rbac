@@ -427,15 +427,12 @@ type ReadUserParams struct {
 
 // UpdateUserJSONBody defines parameters for UpdateUser.
 type UpdateUserJSONBody struct {
-	AccessTokens *[]uint64 `json:"access_tokens,omitempty"`
-	Attr         *struct {
+	Attr *struct {
 		Dept  uint32 `json:"dept"`
 		Level uint8  `json:"level"`
 	} `json:"attr,omitempty"`
-	Email          *openapi_types.Email `json:"email,omitempty"`
-	PersonalTokens *[]uint64            `json:"personal_tokens,omitempty"`
-	RefreshTokens  *[]uint64            `json:"refresh_tokens,omitempty"`
-	Roles          *[]uint32            `json:"roles,omitempty"`
+	Email *openapi_types.Email `json:"email,omitempty"`
+	Roles *[]uint32            `json:"roles,omitempty"`
 }
 
 // ListUserRolesParams defines parameters for ListUserRoles.
