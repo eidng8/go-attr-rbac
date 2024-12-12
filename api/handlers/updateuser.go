@@ -18,9 +18,9 @@ func (s Server) UpdateUser(
 	if nil == request.Body.Email && nil == request.Body.Attr &&
 		(nil == request.Body.Roles || len(*request.Body.Roles) == 0) {
 		var s interface{} = "empty request"
-		return UpdateUser400JSONResponse{
-			N400JSONResponse: N400JSONResponse{
-				Code:   http.StatusBadRequest,
+		return UpdateUser422JSONResponse{
+			N422JSONResponse: N422JSONResponse{
+				Code:   http.StatusUnprocessableEntity,
 				Status: "error",
 				Errors: &s,
 			},

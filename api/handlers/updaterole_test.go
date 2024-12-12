@@ -204,13 +204,13 @@ func Test_UpdateRole_reports_422_if_description_too_long(t *testing.T) {
 	)
 }
 
-func Test_UpdateRole_reports_400_if_request_empty(t *testing.T) {
+func Test_UpdateRole_reports_422_if_request_empty(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/role/2", UpdateRoleJSONBody{})
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, 400, res.Code)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 }
 
 func Test_UpdateRole_reports_404_if_role_not_exists(t *testing.T) {

@@ -5,6 +5,8 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent/entc"
@@ -72,6 +74,7 @@ func newOasExtension() (*entoas.Extension, error) {
 		entoas.Mutations(
 			func(g *gen.Graph, s *ogen.Spec) error {
 				editSpec(s)
+				fixComponents(s)
 				fixPaths(s)
 				constraintRequestBody(s.Paths)
 				fixTokenPaths(s)
@@ -81,7 +84,6 @@ func newOasExtension() (*entoas.Extension, error) {
 				if err != nil {
 					return err
 				}
-				fixComponents(s)
 				fixResponses(s)
 				addPingPath(s)
 				return nil
@@ -301,6 +303,16 @@ func findParamByName(Params []*ogen.Parameter, name string) *ogen.Parameter {
 }
 
 func fixComponents(spec *ogen.Spec) {
+	spec.Components.Responses["401"] = &ogen.Response{
+		Description: http.StatusText(http.StatusUnauthorized),
+	}
+	spec.Components.Responses["401"].Content =
+		spec.Components.Responses["403"].Content
+	spec.Components.Responses["422"] = &ogen.Response{
+		Description: http.StatusText(http.StatusUnprocessableEntity),
+	}
+	spec.Components.Responses["422"].Content =
+		spec.Components.Responses["403"].Content
 	spec.Components.Schemas["PersonalTokenCreate"].Properties =
 		append(
 			spec.Components.Schemas["PersonalTokenCreate"].Properties,
@@ -427,8 +439,6 @@ func fixResponses(spec *ogen.Spec) {
 	spec.Paths["/users"].Post.Responses["201"] =
 		spec.Paths["/users"].Post.Responses["200"]
 	delete(spec.Paths["/users"].Post.Responses, "200")
-	spec.Components.Responses["401"].Content =
-		spec.Components.Responses["403"].Content
 	for _, path := range spec.Paths {
 		if nil == path {
 			continue
@@ -449,14 +459,17 @@ func fixResponses(spec *ogen.Spec) {
 					"403", &ogen.Response{Ref: "#/components/responses/403"},
 				)
 			}
+			if strings.HasPrefix(op.OperationID, "update") &&
+				nil == op.Responses["422"] {
+				op.AddResponse(
+					"422", &ogen.Response{Ref: "#/components/responses/422"},
+				)
+			}
 		}
 	}
 }
 
 func fixTokenPaths(spec *ogen.Spec) {
-	spec.Components.Responses["401"] = &ogen.Response{
-		Description: "Unauthorized",
-	}
 	spec.Components.Schemas["LongLivedToken"] = &ogen.Schema{
 		Type: "object",
 		Properties: []ogen.Property{

@@ -144,7 +144,7 @@ func Test_UpdateUser_reports_422_if_email_malformed(t *testing.T) {
 		},
 	)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, 422, res.Code)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 	require.Contains(t, "email", res.Body.String())
 	require.True(
 		t,
@@ -165,7 +165,7 @@ func Test_UpdateUser_reports_422_if_dept_invalid(t *testing.T) {
 	req, err := svr.patchAs(u, "/user/3", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, 422, res.Code)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 	require.Contains(t, res.Body.String(), "dept")
 	require.True(
 		t,
@@ -186,7 +186,7 @@ func Test_UpdateUser_reports_422_if_level_invalid(t *testing.T) {
 	req, err := svr.patchAs(u, "/user/3", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, 422, res.Code)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 	require.Contains(t, res.Body.String(), "level")
 	require.True(
 		t,
@@ -198,13 +198,13 @@ func Test_UpdateUser_reports_422_if_level_invalid(t *testing.T) {
 	)
 }
 
-func Test_UpdateUser_reports_400_if_request_empty(t *testing.T) {
+func Test_UpdateUser_reports_422_if_request_empty(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/2", UpdateUserJSONBody{})
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
-	require.Equal(t, 400, res.Code)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 }
 
 func Test_UpdateUser_reports_404_if_user_not_exists(t *testing.T) {

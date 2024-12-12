@@ -283,6 +283,13 @@ type N409 struct {
 	Status string       `json:"status"`
 }
 
+// N422 defines model for 422.
+type N422 struct {
+	Code   int          `json:"code"`
+	Errors *interface{} `json:"errors,omitempty"`
+	Status string       `json:"status"`
+}
+
 // N500 defines model for 500.
 type N500 struct {
 	Code   int          `json:"code"`
