@@ -40,8 +40,7 @@ func (s Server) CreatePersonalToken(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
 			t, err := tx.PersonalToken.Create().SetUserID(at.user.ID).
-				SetToken(bin).
-				SetDescription(request.Body.Description).Save(ctx)
+				SetToken(bin).SetDescription(request.Body.Description).Save(ctx)
 			if err != nil {
 				return nil, err
 			}

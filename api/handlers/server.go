@@ -135,6 +135,7 @@ func (s Server) setCookie(
 	gc.SetCookie(name, value, maxAge, path, s.Domain(), true, true)
 }
 
+// Sets the access and refresh token cookies.
 func (s Server) setToken(gc *gin.Context, accessToken, refreshToken string) {
 	gc.SetSameSite(http.SameSiteStrictMode)
 	s.setCookie(gc, accessTokenName, accessToken, "/", 3600)
@@ -143,6 +144,7 @@ func (s Server) setToken(gc *gin.Context, accessToken, refreshToken string) {
 	)
 }
 
+// Returns the jwtToken from the gin.Context.
 func (s Server) getToken(gc *gin.Context) (*jwtToken, error) {
 	token, ok := gc.Value(accessTokenName).(*jwtToken)
 	if !ok {

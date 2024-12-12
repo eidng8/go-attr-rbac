@@ -10,7 +10,7 @@ import (
 
 // RefreshAccessToken refreshes the current access token.
 //
-// Endpoint: DELETE /access-token
+// Endpoint: POST /access-token/refresh
 func (s Server) RefreshAccessToken(
 	ctx context.Context, _ RefreshAccessTokenRequestObject,
 ) (RefreshAccessTokenResponseObject, error) {
