@@ -34,6 +34,9 @@ func (s Server) ListRolePermissions(
 	}
 	query := s.db.Role.Query().Where(role.IDEQ(request.Id)).QueryPermissions().
 		Order(permission.ByID())
+	if request.Params.Name != nil {
+		query.Where(permission.NameHasPrefix(*request.Params.Name))
+	}
 	paginator := paginate.Paginator[ent.Permission, ent.PermissionQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,

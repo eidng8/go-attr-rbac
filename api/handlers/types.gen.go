@@ -386,6 +386,9 @@ type ListRolePermissionsParams struct {
 
 	// PerPage item count to render per page
 	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Name Name of the permission
+	Name *string `form:"name,omitempty" json:"name,omitempty"`
 }
 
 // AssignPermissionsJSONBody defines parameters for AssignPermissions.
@@ -398,6 +401,9 @@ type ListRoleUsersParams struct {
 
 	// PerPage item count to render per page
 	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Name Name of the user
+	Name *string `form:"name,omitempty" json:"name,omitempty"`
 }
 
 // ListRoleParams defines parameters for ListRole.
@@ -449,6 +455,9 @@ type ListUserRolesParams struct {
 
 	// PerPage item count to render per page
 	PerPage *int `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Name Name of the role
+	Name *string `form:"name,omitempty" json:"name,omitempty"`
 }
 
 // AssignRolesJSONBody defines parameters for AssignRoles.

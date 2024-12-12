@@ -382,6 +382,7 @@ func fixPaths(spec *ogen.Spec) {
 		"Paginated list of attached roles",
 		roleListRef,
 	)
+	spec.Paths["/role/{id}/users"].Get.AddParameters(nameParam("user"))
 	roleUsersListRef := spec.Paths["/role/{id}/users"].Get.Responses["200"].
 		Content["application/json"].Schema.Items.Item.Ref
 	paginate.AttachTo(
@@ -389,6 +390,8 @@ func fixPaths(spec *ogen.Spec) {
 		"Paginated list of attached role users",
 		roleUsersListRef,
 	)
+	spec.Paths["/role/{id}/permissions"].Get.
+		AddParameters(nameParam("permission"))
 	rolePermissionsListRef := spec.Paths["/role/{id}/permissions"].Get.
 		Responses["200"].Content["application/json"].Schema.Items.Item.Ref
 	paginate.AttachTo(
@@ -402,6 +405,7 @@ func fixPaths(spec *ogen.Spec) {
 		spec.Paths["/users"].Get,
 		"Paginated list of attached users", userListRef,
 	)
+	spec.Paths["/user/{id}/roles"].Get.AddParameters(nameParam("role"))
 	userRolesListRef := spec.Paths["/user/{id}/roles"].Get.Responses["200"].
 		Content["application/json"].Schema.Items.Item.Ref
 	paginate.AttachTo(
