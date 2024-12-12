@@ -37,10 +37,11 @@ func Test_CreatePersonalToken_creates_a_personal_token(t *testing.T) {
 	require.Equal(t, body.Scopes, *scopes)
 	jti, err := tt.getJtiBinary()
 	require.Nil(t, err)
-	row := db.PersonalToken.Query().
+	row, err := db.PersonalToken.Query().
 		Where(personaltoken.DescriptionEQ(body.Description)).
 		Where(personaltoken.TokenEQ(jti)).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 

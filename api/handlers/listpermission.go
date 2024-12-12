@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/eidng8/go-attr-rbac/ent"
-	"github.com/eidng8/go-attr-rbac/ent/personaltoken"
+	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
 
 type ListPermissionTokenPaginateResponse struct {
-	*paginate.PaginatedList[ent.PersonalToken]
+	*paginate.PaginatedList[ent.Permission]
 }
 
 func (response ListPermissionTokenPaginateResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
@@ -31,8 +31,8 @@ func (s Server) ListPermission(
 	if !ok {
 		return nil, errInvalidContext
 	}
-	query := s.db.PersonalToken.Query().Order(personaltoken.ByID())
-	paginator := paginate.Paginator[ent.PersonalToken, ent.PersonalTokenQuery]{
+	query := s.db.Permission.Query().Order(permission.ByID())
+	paginator := paginate.Paginator[ent.Permission, ent.PermissionQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,
 		GinCtx:   gc,

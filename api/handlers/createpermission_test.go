@@ -25,9 +25,10 @@ func Test_CreatePermission_creates_a_permission(t *testing.T) {
 	require.Nil(t, body.Description)
 	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.Permission.Query().Where(permission.NameEQ(body.Name)).
+	row, err := db.Permission.Query().Where(permission.NameEQ(body.Name)).
 		Where(permission.DescriptionIsNil()).
-		FirstX(context.Background())
+		First(context.Background()) // FirstX() doesn't report not found error
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 
@@ -46,9 +47,10 @@ func Test_CreatePermission_creates_a_permission_with_description(t *testing.T) {
 	require.Equal(t, body.Description, actual.Description)
 	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.Permission.Query().Where(permission.NameEQ(body.Name)).
+	row, err := db.Permission.Query().Where(permission.NameEQ(body.Name)).
 		Where(permission.DescriptionEQ(*body.Description)).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 

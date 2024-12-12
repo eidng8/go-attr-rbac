@@ -58,7 +58,9 @@ func Test_CheckAccessToken_returns_401_if_no_token_role_is_null(t *testing.T) {
 func Test_CheckAccessToken_returns_401_if_no_token_role_mismatch(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
 	usr := getUserById(t, db, 1)
-	roles := db.Role.Query().Limit(3).AllX(context.Background())
+	roles, err := db.Role.Query().Limit(3).All(context.Background())
+	require.Nil(t, err)
+	require.NotEmpty(t, roles)
 	usr.Edges.Roles = roles
 	req, err := svr.getAs(usr, "/access-token")
 	require.Nil(t, err)

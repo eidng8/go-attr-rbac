@@ -28,8 +28,9 @@ func Test_CreateUser_creates_a_user(t *testing.T) {
 	require.Equal(t, body.Username, actual.Username)
 	require.Greater(t, actual.Id, uint64(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.User.Query().Where(user.UsernameEQ(body.Username)).
-		FirstX(context.Background())
+	row, err := db.User.Query().Where(user.UsernameEQ(body.Username)).
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 	eq, err := utils.ComparePassword(body.Password, row.Password)
 	require.Nil(t, err)
@@ -53,9 +54,10 @@ func Test_CreateUser_creates_a_user_with_email(t *testing.T) {
 	require.Equal(t, body.Email, actual.Email)
 	require.Greater(t, actual.Id, uint64(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.User.Query().Where(user.UsernameEQ(body.Username)).
+	row, err := db.User.Query().Where(user.UsernameEQ(body.Username)).
 		Where(user.EmailEQ("test@sample.com")).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 
@@ -72,8 +74,9 @@ func Test_CreateUser_creates_a_user_with_roles(t *testing.T) {
 	actual := User{}
 	require.Nil(t, json.Unmarshal([]byte(res.Body.String()), &actual))
 	require.Equal(t, body.Username, actual.Username)
-	row := db.User.Query().Where(user.UsernameEQ(body.Username)).
-		WithRoles().FirstX(context.Background())
+	row, err := db.User.Query().Where(user.UsernameEQ(body.Username)).
+		WithRoles().First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 	ris := utils.Pluck(row.Edges.Roles, ent.PluckRoleID)
 	slices.Sort(ris)
@@ -100,8 +103,9 @@ func Test_CreateUser_creates_a_user_with_attr(t *testing.T) {
 	require.Equal(t, body.Email, actual.Email)
 	require.Greater(t, actual.Id, uint64(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.User.Query().Where(user.UsernameEQ(body.Username)).
-		FirstX(context.Background())
+	row, err := db.User.Query().Where(user.UsernameEQ(body.Username)).
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 	require.Equal(t, float64(321), (*row.Attr)["dept"])
 	require.Equal(t, float64(123), (*row.Attr)["level"])

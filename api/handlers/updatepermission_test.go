@@ -42,8 +42,9 @@ func Test_UpdatePermission_updates_description(t *testing.T) {
 	desc := "test_permission"
 	body := UpdatePermissionJSONBody{Description: &desc}
 	svr, engine, db, res := setup(t, true)
-	expected := db.Permission.Query().Where(permission.IDEQ(2)).
-		FirstX(context.Background())
+	expected, err := db.Permission.Query().Where(permission.IDEQ(2)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/permission/2", body)
 	require.Nil(t, err)
@@ -55,11 +56,11 @@ func Test_UpdatePermission_updates_description(t *testing.T) {
 	require.Equal(t, desc, *actual.Description)
 	require.Equal(t, expected.CreatedAt.Local(), actual.CreatedAt.Local())
 	require.GreaterOrEqual(t, actual.UpdatedAt.Local(), startTime.Local())
-	row := db.Permission.Query().Where(
+	row, err := db.Permission.Query().Where(
 		permission.IDEQ(2), permission.NameEQ(expected.Name),
 		permission.DescriptionEQ(desc),
-	).
-		FirstX(context.Background())
+	).First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, row.CreatedAt.Local(), actual.CreatedAt.Local())
 }
 
@@ -85,8 +86,9 @@ func Test_UpdatePermission_denies_non_user(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
 	svr, engine, db, res := setup(t, false)
-	expected := db.Permission.Query().Where(permission.IDEQ(3)).
-		FirstX(context.Background())
+	expected, err := db.Permission.Query().Where(permission.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	req, err := svr.patch("/permission/3", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -107,8 +109,9 @@ func Test_UpdatePermission_denies_user_without_permission(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
 	svr, engine, db, res := setup(t, false)
-	expected := db.Permission.Query().Where(permission.IDEQ(3)).
-		FirstX(context.Background())
+	expected, err := db.Permission.Query().Where(permission.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 2)
 	req, err := svr.patchAs(u, "/permission/3", body)
 	require.Nil(t, err)

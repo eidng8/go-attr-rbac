@@ -14,16 +14,19 @@ import (
 
 func Test_AssignPermissions_attaches_permission_to_role(t *testing.T) {
 	svr, engine, db, res := setup(t, true)
-	rows := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).AllX(context.Background())
+	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
+		Order(permission.ByID()).All(context.Background())
+	require.Nil(t, err)
+	require.NotEmpty(t, rows)
 	ids := utils.Pluck(rows, pluckPermissionId)
 	usr := getUserById(t, db, 1)
 	req, err := svr.postAs(usr, "/role/3/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusNoContent, res.Code)
-	rows = db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		Select(permission.FieldID).Limit(3).AllX(context.Background())
+	rows, err = db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
+		Select(permission.FieldID).Limit(3).All(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, ids, utils.Pluck(rows, pluckPermissionId))
 }
 
@@ -38,29 +41,35 @@ func Test_AssignPermissions_reports_422_if_permission_is_empty(t *testing.T) {
 
 func Test_AssignPermissions_returns_401_if_non_user(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
-	rows := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).AllX(context.Background())
+	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
+		Order(permission.ByID()).All(context.Background())
+	require.Nil(t, err)
+	require.NotEmpty(t, rows)
 	ids := utils.Pluck(rows, pluckPermissionId)
 	req, err := svr.post("/role/3/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusUnauthorized, res.Code)
-	ex := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		ExistX(context.Background())
+	ex, err := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
+		Exist(context.Background())
+	require.Nil(t, err)
 	require.False(t, ex)
 }
 
 func Test_AssignPermissions_returns_403_if_user_without_permission(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
-	rows := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).AllX(context.Background())
+	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
+		Order(permission.ByID()).All(context.Background())
+	require.Nil(t, err)
+	require.NotEmpty(t, rows)
 	ids := utils.Pluck(rows, pluckPermissionId)
 	usr := getUserById(t, db, 3)
 	req, err := svr.postAs(usr, "/role/3/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusForbidden, res.Code)
-	ex := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		ExistX(context.Background())
+	ex, err := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
+		Exist(context.Background())
+	require.Nil(t, err)
 	require.False(t, ex)
 }

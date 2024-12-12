@@ -19,7 +19,9 @@ func Test_UpdateUser_updates_email(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
 	svr, engine, db, res := setup(t, true)
-	expected := db.User.Query().Where(user.IDEQ(2)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(2)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/2", body)
 	require.Nil(t, err)
@@ -32,11 +34,12 @@ func Test_UpdateUser_updates_email(t *testing.T) {
 	require.Equal(t, userAttrFromMap(*expected.Attr), actual.Attr)
 	require.Equal(t, expected.CreatedAt.Local(), actual.CreatedAt.Local())
 	require.GreaterOrEqual(t, actual.UpdatedAt.Local(), startTime.Local())
-	row := db.User.Query().
+	row, err := db.User.Query().
 		Where(user.Username(expected.Username)).
 		Where(user.PasswordEQ(expected.Password)).
 		Where(user.IDEQ(2), user.EmailEQ(string(email))).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, row.CreatedAt.Local(), actual.CreatedAt.Local())
 }
 
@@ -44,7 +47,9 @@ func Test_UpdateUser_updates_a_user_with_attr(t *testing.T) {
 	attr := userAttrOf(321, 123)
 	body := UpdateUserJSONBody{Attr: attr}
 	svr, engine, db, res := setup(t, true)
-	expected := db.User.Query().Where(user.IDEQ(2)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(2)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/2", body)
 	require.Nil(t, err)
@@ -57,8 +62,9 @@ func Test_UpdateUser_updates_a_user_with_attr(t *testing.T) {
 	require.Equal(t, attr, actual.Attr)
 	require.Equal(t, expected.CreatedAt.Local(), actual.CreatedAt.Local())
 	require.GreaterOrEqual(t, actual.UpdatedAt.Local(), startTime.Local())
-	row := db.User.Query().Where(user.IDEQ(2), user.AttrNotNil()).
-		FirstX(context.Background())
+	row, err := db.User.Query().Where(user.IDEQ(2), user.AttrNotNil()).
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, userAttrToMap(*attr), row.Attr)
 }
 
@@ -84,7 +90,9 @@ func Test_UpdateUser_denies_non_user(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
 	svr, engine, db, res := setup(t, false)
-	expected := db.User.Query().Where(user.IDEQ(3)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	req, err := svr.patch("/user/3", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -103,7 +111,9 @@ func Test_UpdateUser_denies_user_without_permission(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
 	svr, engine, db, res := setup(t, false)
-	expected := db.User.Query().Where(user.IDEQ(3)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 2)
 	req, err := svr.patchAs(u, "/user/3", body)
 	require.Nil(t, err)
@@ -121,7 +131,9 @@ func Test_UpdateUser_denies_user_without_permission(t *testing.T) {
 
 func Test_UpdateUser_reports_422_if_email_malformed(t *testing.T) {
 	svr, engine, db, res := setup(t, false)
-	expected := db.User.Query().Where(user.IDEQ(3)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := http.NewRequest(
 		http.MethodPatch, "/user/3",
@@ -160,7 +172,9 @@ func Test_UpdateUser_reports_422_if_dept_invalid(t *testing.T) {
 	attr := userAttrOf(0, 0)
 	body := UpdateUserJSONBody{Attr: attr}
 	svr, engine, db, res := setup(t, false)
-	expected := db.User.Query().Where(user.IDEQ(3)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/3", body)
 	require.Nil(t, err)
@@ -181,7 +195,9 @@ func Test_UpdateUser_reports_422_if_level_invalid(t *testing.T) {
 	attr := userAttrOf(1, 0)
 	body := UpdateUserJSONBody{Attr: attr}
 	svr, engine, db, res := setup(t, false)
-	expected := db.User.Query().Where(user.IDEQ(3)).FirstX(context.Background())
+	expected, err := db.User.Query().Where(user.IDEQ(3)).
+		First(context.Background())
+	require.Nil(t, err)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/3", body)
 	require.Nil(t, err)

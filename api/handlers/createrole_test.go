@@ -25,9 +25,10 @@ func Test_CreateRole_creates_a_role(t *testing.T) {
 	require.Nil(t, body.Description)
 	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.Role.Query().Where(role.NameEQ(body.Name)).
+	row, err := db.Role.Query().Where(role.NameEQ(body.Name)).
 		Where(role.DescriptionIsNil()).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 
@@ -46,9 +47,10 @@ func Test_CreateRole_creates_a_role_with_description(t *testing.T) {
 	require.Equal(t, body.Description, actual.Description)
 	require.Greater(t, actual.Id, uint32(numFixtures))
 	require.GreaterOrEqual(t, *actual.CreatedAt, startTime)
-	row := db.Role.Query().Where(role.NameEQ(body.Name)).
+	row, err := db.Role.Query().Where(role.NameEQ(body.Name)).
 		Where(role.DescriptionEQ(*body.Description)).
-		FirstX(context.Background())
+		First(context.Background())
+	require.Nil(t, err)
 	require.Equal(t, actual.Id, row.ID)
 }
 
