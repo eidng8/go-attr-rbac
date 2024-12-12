@@ -32,6 +32,14 @@ func (s Server) ListUser(
 		return nil, errInvalidContext
 	}
 	query := s.db.User.Query().Order(user.ByID())
+	if request.Params.Name != nil {
+		query = query.Where(
+			user.Or(
+				user.UsernameHasPrefix(*request.Params.Name),
+				user.EmailHasPrefix(*request.Params.Name),
+			),
+		)
+	}
 	paginator := paginate.Paginator[ent.User, ent.UserQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,

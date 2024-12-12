@@ -32,6 +32,9 @@ func (s Server) ListRole(
 		return nil, errInvalidContext
 	}
 	query := s.db.Role.Query().Order(role.ByID())
+	if request.Params.Name != nil {
+		query = query.Where(role.NameHasPrefix(*request.Params.Name))
+	}
 	paginator := paginate.Paginator[ent.Role, ent.RoleQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,

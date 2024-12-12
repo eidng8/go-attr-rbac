@@ -31,7 +31,12 @@ func (s Server) ListPersonalToken(
 	if !ok {
 		return nil, errInvalidContext
 	}
-	query := s.db.PersonalToken.Query().Order(personaltoken.ByID())
+	token, err := s.getToken(gc)
+	if err != nil {
+		return ListPersonalToken401JSONResponse{}, nil
+	}
+	query := s.db.PersonalToken.Query().Order(personaltoken.ByID()).
+		Where(personaltoken.UserIDEQ(token.user.ID))
 	paginator := paginate.Paginator[ent.PersonalToken, ent.PersonalTokenQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/eidng8/go-attr-rbac/ent"
@@ -36,6 +37,20 @@ func fixture(tb testing.TB, client *ent.Client) {
 	client.User.CreateBulk(users...).SaveX(qc)
 	client.Role.Update().Where(role.IDEQ(2)).AddPermissionIDs(2, 3, 4).ExecX(qc)
 	client.User.Update().Where(user.IDEQ(2)).AddRoleIDs(2, 3, 4).ExecX(qc)
+}
+
+func seedPersonalTokens(tb testing.TB, db *ent.Client, user uint64) {
+	qc := context.Background()
+	tokens := make([]*ent.PersonalTokenCreate, numFixtures)
+	for i := range numFixtures {
+		uuid7, err := uuid.NewV7()
+		require.Nil(tb, err)
+		bin, err := uuid7.MarshalBinary()
+		require.Nil(tb, err)
+		tokens[i] = db.PersonalToken.Create().SetToken(bin).SetUserID(user).
+			SetDescription(fmt.Sprintf("personal token %d", i))
+	}
+	db.PersonalToken.CreateBulk(tokens...).ExecX(qc)
 }
 
 // Gets the user from database. Does NOT eagerly load anything.
