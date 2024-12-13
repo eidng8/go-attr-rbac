@@ -40,6 +40,7 @@ func (s Server) Login(
 				},
 			}, nil
 		}
+		api.Log.Debugf("login failed: %v", err)
 		return nil, err
 	}
 	m, e := utils.ComparePassword(req.Body.Password, u.Password)

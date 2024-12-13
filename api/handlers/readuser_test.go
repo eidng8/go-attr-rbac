@@ -10,7 +10,7 @@ import (
 )
 
 func Test_ReadUser_returns_a_user(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2")
 	require.Nil(t, err)
@@ -37,7 +37,7 @@ func Test_ReadUser_returns_trashed_user(t *testing.T) {
 }
 
 func Test_ReadUser_returns_404_if_not_found(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/12345")
 	require.Nil(t, err)
@@ -85,4 +85,14 @@ func Test_ReadUser_returns_403_if_user_without_permission(t *testing.T) {
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusForbidden, res.Code)
+}
+
+func Test_ReadUser_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.getAs(u, "/user/2")
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

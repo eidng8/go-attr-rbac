@@ -6,6 +6,7 @@ import (
 	"github.com/eidng8/go-ent/softdelete"
 	"github.com/oapi-codegen/runtime/types"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
@@ -25,6 +26,7 @@ func (s Server) ReadUser(
 		if ent.IsNotFound(err) {
 			return ReadUser404JSONResponse{}, nil
 		}
+		api.Log.Debugf("ReadUser error: %v", err)
 		return nil, err
 	}
 	res := ReadUser200JSONResponse{

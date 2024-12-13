@@ -24,8 +24,6 @@ type Server struct {
 	db *ent.Client
 	// base URL for the URL generation
 	baseUrl string
-	// private key for JWT token generation
-	secret []byte
 	// number of rows to return in hint requests
 	hintSize int
 	// list of public operations
@@ -50,12 +48,9 @@ func NewEngine(entClient *ent.Client) (*Server, *gin.Engine, error) {
 }
 
 func newApiServer(db *ent.Client) *Server {
-	secret, err := getSecret()
-	utils.PanicIfError(err)
 	return &Server{
 		db:               db,
 		baseUrl:          os.Getenv(api.BaseUrlName),
-		secret:           secret,
 		hintSize:         getHintSize(5),
 		publicOperations: getPublicOperations(),
 	}
@@ -129,7 +124,7 @@ func (s Server) Domain() string {
 // getSecret returns the secret key for the JWT token generation.
 // For use by `jwt.Parse()`.
 func (s Server) getSecret(_ *jwt.Token) (interface{}, error) {
-	return s.secret, nil
+	return getSecret()
 }
 
 func (s Server) setCookie(

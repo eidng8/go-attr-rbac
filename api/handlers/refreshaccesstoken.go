@@ -14,6 +14,7 @@ import (
 func (s Server) RefreshAccessToken(
 	ctx context.Context, _ RefreshAccessTokenRequestObject,
 ) (RefreshAccessTokenResponseObject, error) {
+	// TODO revoke current tokens but don't set cookies
 	gc, ok := ctx.(*gin.Context)
 	if !ok {
 		return nil, errInvalidContext

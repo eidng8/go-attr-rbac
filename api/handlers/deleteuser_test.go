@@ -82,7 +82,7 @@ func Test_DeleteUser_reports_404_if_user_not_exists(t *testing.T) {
 }
 
 func Test_DeleteUser_reports_404_if_user_was_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/2")
@@ -98,4 +98,14 @@ func Test_DeleteUser_reports_422_if_invalid_id(t *testing.T) {
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 422, res.Code)
+}
+
+func Test_DeleteUser_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.deleteAs(u, "/user/2")
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

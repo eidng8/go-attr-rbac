@@ -239,3 +239,15 @@ func Test_UpdateRole_reports_404_if_role_not_exists(t *testing.T) {
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 404, res.Code)
 }
+
+func Test_UpdateRole_returns_500_if_db_error_unhandled(t *testing.T) {
+	name := "test_role"
+	body := UpdateRoleJSONBody{Name: &name}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.patchAs(u, "/role/2", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+}

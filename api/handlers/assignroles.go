@@ -13,7 +13,7 @@ import (
 func (s Server) AssignRoles(
 	_ context.Context, request AssignRolesRequestObject,
 ) (AssignRolesResponseObject, error) {
-	_, err := s.db.Debug().Transaction(
+	_, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
 			return nil, tx.User.UpdateOneID(request.Id).

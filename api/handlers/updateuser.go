@@ -6,6 +6,7 @@ import (
 
 	"github.com/oapi-codegen/runtime/types"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -52,6 +53,7 @@ func (s Server) UpdateUser(
 				},
 			}, nil
 		}
+		api.Log.Debugf("UpdateUser error: %v", err)
 		return nil, err
 	}
 	u := r.(*ent.User)

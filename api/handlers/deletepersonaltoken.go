@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -29,6 +30,7 @@ func (s Server) DeletePersonalToken(
 				},
 			}, nil
 		}
+		api.Log.Debugf("DeletePersonalToken error: %v", err)
 		return nil, err
 	}
 	return DeletePersonalToken204Response{}, nil

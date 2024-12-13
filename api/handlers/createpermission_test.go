@@ -145,9 +145,20 @@ func Test_CreatePermission_reports_400_if_permission_exists(t *testing.T) {
 	require.Equal(t, 400, res.Code)
 	expected := map[string]interface{}{
 		"code":   http.StatusBadRequest,
-		"errors": "permission `auth:Login` already exists",
-		"status": "error",
+		"errors": msgExists,
+		"status": msgError,
 	}
 	requireJsonEqualsString(t, expected, res.Body.String())
 	require.Equal(t, count, db.Permission.Query().CountX(context.Background()))
+}
+
+func Test_CreatePermission_returns_500_if_db_error_unhandled(t *testing.T) {
+	body := CreatePermissionJSONBody{Name: "auth:Login"}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/permissions", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

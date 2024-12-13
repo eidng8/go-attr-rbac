@@ -7,6 +7,7 @@ import (
 	"github.com/eidng8/go-ent/paginate"
 	"github.com/gin-gonic/gin"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 	"github.com/eidng8/go-attr-rbac/ent/role"
@@ -45,6 +46,7 @@ func (s Server) ListRolePermissions(
 	}
 	page, err := paginator.GetPage()
 	if err != nil {
+		api.Log.Debugf("ListRolePermissions error: %v", err)
 		return nil, err
 	}
 	return ListRolePermissionsPaginateResponse{PaginatedList: page}, nil

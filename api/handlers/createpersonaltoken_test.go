@@ -62,6 +62,16 @@ func Test_CreatePersonalToken_returns_401_if_non_user(t *testing.T) {
 	)
 }
 
+func Test_CreatePersonalToken_returns_401_if_invalid_context_token(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
+	r, err := svr.CreatePersonalToken(
+		gin.CreateTestContextOnly(res, engine),
+		CreatePersonalTokenRequestObject{},
+	)
+	require.Nil(t, err)
+	require.IsType(t, r, CreatePersonalToken401JSONResponse{})
+}
+
 func Test_CreatePersonalToken_returns_403_if_user_without_permission(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Scopes: []string{"read", "write"}, Ttl: 3600,
@@ -170,12 +180,15 @@ func Test_CreatePersonalToken_returns_500_if_invalid_context(t *testing.T) {
 	require.ErrorIs(t, err, errInvalidContext)
 }
 
-func Test_CreatePersonalToken_returns_401_if_invalid_context_token(t *testing.T) {
-	svr, engine, _, res := setupTestCase(t, false)
-	r, err := svr.CreatePersonalToken(
-		gin.CreateTestContextOnly(res, engine),
-		CreatePersonalTokenRequestObject{},
-	)
+func Test_CreatePersonalToken_returns_500_if_db_error_unhandled(t *testing.T) {
+	body := CreatePersonalTokenJSONBody{
+		Description: "test_perm", Scopes: []string{"read", "write"}, Ttl: 3600,
+	}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/personal-tokens", body)
 	require.Nil(t, err)
-	require.IsType(t, r, CreatePersonalToken401JSONResponse{})
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

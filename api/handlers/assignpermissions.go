@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -13,7 +14,7 @@ import (
 func (s Server) AssignPermissions(
 	_ context.Context, request AssignPermissionsRequestObject,
 ) (AssignPermissionsResponseObject, error) {
-	_, err := s.db.Debug().Transaction(
+	_, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
 			return nil, tx.Role.UpdateOneID(request.Id).
@@ -30,6 +31,7 @@ func (s Server) AssignPermissions(
 				},
 			}, nil
 		}
+		api.Log.Debugf("AssignPermissions error: %v", err)
 		return nil, err
 	}
 	return AssignPermissions204Response{}, nil

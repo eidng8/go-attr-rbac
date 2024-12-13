@@ -5,6 +5,7 @@ import (
 
 	"github.com/oapi-codegen/runtime/types"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
@@ -24,6 +25,7 @@ func (s Server) HintUsers(
 		).
 		All(context.Background())
 	if err != nil {
+		api.Log.Debugf("HintUsers error: %v", err)
 		return nil, err
 	}
 	list := make(HintUsers200JSONResponse, len(rows))

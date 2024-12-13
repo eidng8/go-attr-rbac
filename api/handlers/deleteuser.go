@@ -6,6 +6,7 @@ import (
 
 	"github.com/eidng8/go-ent/softdelete"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -33,6 +34,7 @@ func (s Server) DeleteUser(
 				},
 			}, nil
 		}
+		api.Log.Debugf("DeleteUser error: %v", err)
 		return nil, err
 	}
 	return DeleteUser204Response{}, nil

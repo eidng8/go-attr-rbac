@@ -29,6 +29,31 @@ var (
 	startTime = time.Now()
 )
 
+func setupTestEnv(tb testing.TB) {
+	api.Log.Debug = true
+	require.Nil(tb, os.Setenv(api.BaseUrlName, "http://localhost"))
+	require.Nil(tb, os.Setenv(api.PrivateKeyName, randomSecret(32)))
+	require.Nil(tb, os.Setenv(api.PublicOpsName, "ping"))
+}
+
+func useEmptyDb(tb testing.TB) *ent.Client {
+	db, err := ent.Open("sqlite3", ":memory:?_fk=1")
+	require.Nil(tb, err)
+	tb.Cleanup(func() { require.Nil(tb, db.Close()) })
+	return db
+}
+func setupTestCaseWithEmptyDb(tb testing.TB) (
+	*Server, *gin.Engine, *ent.Client, *httptest.ResponseRecorder,
+) {
+	setupTestEnv(tb)
+	db := enttest.Open(tb, "sqlite3", ":memory:?_fk=1")
+	tb.Cleanup(func() { require.Nil(tb, db.Close()) })
+	server, engine, err := NewEngine(nil)
+	require.Nil(tb, err)
+	startTime = time.Now()
+	return server, engine, testdb, httptest.NewRecorder()
+}
+
 // Creates a new server, engine, and client for testing.
 // If there were no previously connected database, this function will create a
 // new database for testing populated with fixture data. If `refresh` is true,
@@ -37,11 +62,8 @@ var (
 func setupTestCase(tb testing.TB, refresh bool) (
 	*Server, *gin.Engine, *ent.Client, *httptest.ResponseRecorder,
 ) {
-	api.Log.Debug = true
 	nrd := nil == testdb
-	require.Nil(tb, os.Setenv(api.BaseUrlName, "http://localhost"))
-	require.Nil(tb, os.Setenv(api.PrivateKeyName, randomSecret(32)))
-	require.Nil(tb, os.Setenv(api.PublicOpsName, "ping"))
+	setupTestEnv(tb)
 	if nrd {
 		// testdb = enttest.Open(
 		//     tb, "mysql",
@@ -59,10 +81,10 @@ func setupTestCase(tb testing.TB, refresh bool) (
 		},
 	)
 	server, engine, err := NewEngine(testdb)
+	require.Nil(tb, err)
 	if nrd {
 		fixture(tb, testdb)
 	}
-	require.Nil(tb, err)
 	startTime = time.Now()
 	return server, engine, testdb, httptest.NewRecorder()
 }
@@ -192,4 +214,9 @@ func getTokensFromSetCookieHeaders(
 		}
 	}
 	return
+}
+
+func Test_Domain_returns_empty_string_if_error(t *testing.T) {
+	svr := Server{baseUrl: "\x01"}
+	require.Empty(t, svr.Domain())
 }

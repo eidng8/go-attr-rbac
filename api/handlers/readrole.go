@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/role"
 )
@@ -18,6 +19,7 @@ func (s Server) ReadRole(
 		if ent.IsNotFound(err) {
 			return ReadRole404JSONResponse{}, nil
 		}
+		api.Log.Debugf("ReadRole error: %v", err)
 		return nil, err
 	}
 	return ReadRole200JSONResponse{

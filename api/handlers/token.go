@@ -293,14 +293,17 @@ func (tk *jwtToken) expired() error {
 	return nil
 }
 
+// Issues an access token for the user. Doesn't access database.
 func (s Server) issueAccessToken(user *ent.User) (string, error) {
 	return s.issueJwtToken(user, time.Hour)
 }
 
+// Issues a refresh token for the user. Doesn't access database.
 func (s Server) issueRefreshToken(user *ent.User) (string, error) {
 	return s.issueJwtToken(user, 7*24*time.Hour)
 }
 
+// Issues a personal token for the user. Doesn't access database.
 func (s Server) issuePersonalToken(
 	user *ent.User, scopes []string, ttl time.Duration,
 ) (*uuid.UUID, string, error) {
@@ -328,17 +331,23 @@ func (s Server) issueJwtToken(user *ent.User, ttl time.Duration) (
 	return s.issueJwtTokenWithClaims(jwt.SigningMethodHS256, claims)
 }
 
+// Issues a JWT token with the given claims. Doesn't access database.
 func (s Server) issueJwtTokenWithClaims(
 	method jwt.SigningMethod, claims *accessTokenClaims,
 ) (string, error) {
 	t := jwt.NewWithClaims(method, claims)
-	ts, err := t.SignedString(s.secret)
+	key, err := s.getSecret(nil)
+	if err != nil {
+		return "", err
+	}
+	ts, err := t.SignedString(key)
 	if err != nil {
 		return "", err
 	}
 	return ts, nil
 }
 
+// Builds the token claims for the user. Doesn't access database.
 func (s Server) buildTokenClaims(user *ent.User, ttl time.Duration) (
 	*uuid.UUID, *accessTokenClaims, error,
 ) {

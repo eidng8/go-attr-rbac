@@ -234,3 +234,15 @@ func Test_UpdateUser_reports_404_if_user_not_exists(t *testing.T) {
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 404, res.Code)
 }
+
+func Test_UpdateUser_returns_500_if_db_error_unhandled(t *testing.T) {
+	email := types.Email("test@example.com")
+	body := UpdateUserJSONBody{Email: &email}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.patchAs(u, "/user/2", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+}

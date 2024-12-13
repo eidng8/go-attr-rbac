@@ -32,7 +32,7 @@ func Test_AssignRoles_attaches_role_to_user(t *testing.T) {
 }
 
 func Test_AssignRoles_reports_422_if_role_is_empty(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 1)
 	req, err := svr.postAs(usr, "/user/3/roles", nil)
 	require.Nil(t, err)
@@ -91,4 +91,14 @@ func Test_AssignRoles_returns_403_if_user_without_permission(t *testing.T) {
 		Exist(context.Background())
 	require.Nil(t, err)
 	require.False(t, ex)
+}
+
+func Test_AssignRoles_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/user/2/roles", []int{1})
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

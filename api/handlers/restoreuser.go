@@ -6,6 +6,7 @@ import (
 
 	"github.com/eidng8/go-ent/softdelete"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
@@ -34,6 +35,7 @@ func (s Server) RestoreUser(
 				},
 			}, nil
 		}
+		api.Log.Debugf("RestoreUser error: %v", err)
 		return nil, err
 	}
 	return RestoreUser204Response{}, nil
