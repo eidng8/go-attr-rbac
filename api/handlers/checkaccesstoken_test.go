@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
@@ -199,7 +200,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_cookie(t *testing.T) {
 		&http.Cookie{
 			Name:     accessTokenName,
 			Value:    "123456",
-			Path:     "/",
+			Path:     api.AccessTokenPath,
 			Domain:   "localhost",
 			MaxAge:   3600,
 			Secure:   true,

@@ -11,6 +11,7 @@ import (
 	"github.com/oapi-codegen/runtime/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
@@ -147,7 +148,7 @@ func Test_UpdateUser_reports_422_if_email_malformed(t *testing.T) {
 		&http.Cookie{
 			Name:     accessTokenName,
 			Value:    at,
-			Path:     "/",
+			Path:     api.AccessTokenPath,
 			Domain:   svr.Domain(),
 			MaxAge:   3600,
 			Secure:   true,

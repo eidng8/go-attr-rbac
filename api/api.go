@@ -12,6 +12,7 @@ const (
 
 	OperationLogin        = "auth:Login"
 	OperationRefreshToken = "auth:RefreshAccessToken"
+	AccessTokenPath       = "/"
 	RefreshTokenPath      = "/access-token/refresh"
 )
 

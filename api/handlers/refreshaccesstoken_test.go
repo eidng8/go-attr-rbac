@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/eidng8/go-utils"
 	"github.com/stretchr/testify/require"
 
 	"github.com/eidng8/go-attr-rbac/api"
@@ -18,30 +17,19 @@ func Test_RefreshAccessToken_sets_token_cookies(t *testing.T) {
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusNoContent, res.Code)
-	cookies, err := utils.SliceMapFunc(
-		res.Header().Values("Set-Cookie"),
-		func(c string) (*http.Cookie, error) { return http.ParseSetCookie(c) },
-	)
-	require.Nil(t, err)
-	at := utils.SliceFindFunc(
-		cookies, func(c *http.Cookie) bool { return accessTokenName == c.Name },
-	)
-	require.NotNil(t, at)
-	require.Equal(t, "/", at.Path)
-	require.Equal(t, 3600, at.MaxAge)
-	require.Equal(t, http.SameSiteStrictMode, at.SameSite)
-	require.True(t, at.HttpOnly)
-	require.True(t, at.Secure)
-	rt := utils.SliceFindFunc(
-		cookies,
-		func(c *http.Cookie) bool { return refreshTokenName == c.Name },
-	)
-	require.NotNil(t, rt)
-	require.Equal(t, api.RefreshTokenPath, rt.Path)
-	require.Equal(t, 7*24*3600, rt.MaxAge)
-	require.Equal(t, http.SameSiteStrictMode, rt.SameSite)
-	require.True(t, rt.HttpOnly)
-	require.True(t, rt.Secure)
+	cat, crt := getTokensFromSetCookieHeaders(t, res)
+	require.NotNil(t, cat)
+	require.Equal(t, api.AccessTokenPath, cat.Path)
+	require.Equal(t, 3600, cat.MaxAge)
+	require.Equal(t, http.SameSiteStrictMode, cat.SameSite)
+	require.True(t, cat.HttpOnly)
+	require.True(t, cat.Secure)
+	require.NotNil(t, crt)
+	require.Equal(t, api.RefreshTokenPath, crt.Path)
+	require.Equal(t, 7*24*3600, crt.MaxAge)
+	require.Equal(t, http.SameSiteStrictMode, crt.SameSite)
+	require.True(t, crt.HttpOnly)
+	require.True(t, crt.Secure)
 }
 
 func Test_RefreshAccessToken_returns_401_if_invalid_refresh_token(t *testing.T) {
@@ -56,7 +44,7 @@ func Test_RefreshAccessToken_returns_401_if_invalid_refresh_token(t *testing.T) 
 		&http.Cookie{
 			Name:     accessTokenName,
 			Value:    at,
-			Path:     "/",
+			Path:     api.AccessTokenPath,
 			Domain:   svr.Domain(),
 			MaxAge:   3600,
 			Secure:   true,

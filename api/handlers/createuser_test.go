@@ -16,6 +16,50 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/user"
 )
 
+func Test_validatePassword_rejects_numeric_only_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("12345678"))
+}
+
+func Test_validatePassword_rejects_uppercase_only_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("ABCDEFGH"))
+}
+
+func Test_validatePassword_rejects_lowercase_only_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("abcdefgh"))
+}
+
+func Test_validatePassword_rejects_special_only_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("#?!@$%^&*-_"))
+}
+
+func Test_validatePassword_rejects_numeric_and_uppercase_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("1234ABCD"))
+}
+
+func Test_validatePassword_rejects_numeric_and_lowercase_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("1234abcd"))
+}
+
+func Test_validatePassword_rejects_numeric_and_special_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("1234#?!@"))
+}
+
+func Test_validatePassword_rejects_uppercase_and_lowercase_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("ABCDabcd"))
+}
+
+func Test_validatePassword_rejects_uppercase_and_special_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("ABCD#?!@"))
+}
+
+func Test_validatePassword_rejects_lowercase_and_special_password(t *testing.T) {
+	require.Equal(t, errPasswordToSimple, validatePassword("abcd#?!@"))
+}
+
+func Test_validatePassword_accepts_complex_password(t *testing.T) {
+	require.Nil(t, validatePassword("Abcd_1234"))
+}
+
 func Test_CreateUser_creates_a_user(t *testing.T) {
 	body := CreateUserJSONBody{Username: "test_user", Password: "Abcd_1234"}
 	svr, engine, db, res := setup(t, true)

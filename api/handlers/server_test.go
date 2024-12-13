@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eidng8/go-utils"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -131,7 +132,7 @@ func (s Server) request(
 		&http.Cookie{
 			Name:     accessTokenName,
 			Value:    at,
-			Path:     "/",
+			Path:     api.AccessTokenPath,
 			Domain:   s.Domain(),
 			MaxAge:   3600,
 			Secure:   true,
@@ -172,4 +173,23 @@ func unmarshalResponse[T interface{}](
 	var v T
 	require.Nil(tb, json.Unmarshal(res.Body.Bytes(), &v))
 	return v
+}
+
+func getTokensFromSetCookieHeaders(
+	tb testing.TB, res *httptest.ResponseRecorder,
+) (accessToken, refreshToken *http.Cookie) {
+	cookies, err := utils.SliceMapFunc(
+		res.Header().Values("Set-Cookie"),
+		func(c string) (*http.Cookie, error) { return http.ParseSetCookie(c) },
+	)
+	require.Nil(tb, err)
+	for _, c := range cookies {
+		switch c.Name {
+		case accessTokenName:
+			accessToken = c
+		case refreshTokenName:
+			refreshToken = c
+		}
+	}
+	return
 }

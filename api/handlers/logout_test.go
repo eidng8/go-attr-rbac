@@ -12,10 +12,10 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/accesstoken"
 )
 
-func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
+func Test_Logout_clears_current_tokens(t *testing.T) {
 	svr, engine, db, res := setup(t, true)
 	u := getUserById(t, db, 1)
-	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
+	req, err := http.NewRequest(http.MethodPost, "/logout", nil)
 	require.Nil(t, err)
 	var at, rt string
 	at, err = svr.issueAccessToken(u)
@@ -110,33 +110,4 @@ func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
 	resc := httptest.NewRecorder()
 	engine.ServeHTTP(resc, reqc)
 	require.Equal(t, http.StatusUnauthorized, resc.Code)
-}
-
-func Test_RevokeAccessToken_returns_401_if_invalid_access_token(t *testing.T) {
-	svr, engine, _, res := setup(t, true)
-	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
-	require.Nil(t, err)
-	req.AddCookie(
-		&http.Cookie{
-			Name:     accessTokenName,
-			Value:    "invalid token",
-			Path:     api.AccessTokenPath,
-			Domain:   svr.Domain(),
-			MaxAge:   3600,
-			Secure:   true,
-			HttpOnly: true,
-			SameSite: http.SameSiteStrictMode,
-		},
-	)
-	engine.ServeHTTP(res, req)
-	require.Equal(t, http.StatusUnauthorized, res.Code)
-}
-
-func Test_RevokeAccessToken_returns_401_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
-	res, err := svr.RevokeAccessToken(
-		context.Background(), RevokeAccessTokenRequestObject{},
-	)
-	require.Nil(t, err)
-	require.IsType(t, RevokeAccessToken401JSONResponse{}, res)
 }

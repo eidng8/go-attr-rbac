@@ -208,7 +208,7 @@ func (s Server) revokeAccessToken(ctx context.Context) error {
 		},
 	)
 	gc.SetSameSite(http.SameSiteStrictMode)
-	s.setCookie(gc, accessTokenName, "", "/", -1)
+	s.setCookie(gc, accessTokenName, "", api.AccessTokenPath, -1)
 	s.setCookie(gc, refreshTokenName, "", api.RefreshTokenPath, -1)
 	return err
 }

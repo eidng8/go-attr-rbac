@@ -139,7 +139,7 @@ func (s Server) setCookie(
 // Sets the access and refresh token cookies.
 func (s Server) setToken(gc *gin.Context, accessToken, refreshToken string) {
 	gc.SetSameSite(http.SameSiteStrictMode)
-	s.setCookie(gc, accessTokenName, accessToken, "/", 3600)
+	s.setCookie(gc, accessTokenName, accessToken, api.AccessTokenPath, 3600)
 	s.setCookie(
 		gc, refreshTokenName, refreshToken, api.RefreshTokenPath, 7*24*3600,
 	)

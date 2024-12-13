@@ -29,41 +29,14 @@ var (
 //
 // Endpoint: POST /users
 func (s Server) CreateUser(
-	ctx context.Context, request CreateUserRequestObject,
+	_ context.Context, request CreateUserRequestObject,
 ) (CreateUserResponseObject, error) {
 	u, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
-			create := tx.User.Create().SetUsername(request.Body.Username)
-			if !(numChecker.MatchString(request.Body.Password) &&
-				lowercaseChecker.MatchString(request.Body.Password) &&
-				uppercaseChecker.MatchString(request.Body.Password) &&
-				specialChecker.MatchString(request.Body.Password)) {
-				return nil, errPasswordToSimple
-			}
-			hash, err := utils.HashPassword(request.Body.Password)
-			if err != nil {
-				return nil, err
-			}
-			create.SetPassword(hash)
-			if request.Body.Email != nil {
-				create.SetEmail(string(*request.Body.Email))
-			}
-			if request.Body.Roles != nil && len(*request.Body.Roles) > 0 {
-				roles, err := utils.SliceMapFunc(
-					*request.Body.Roles, func(r uint32) (*ent.Role, error) {
-						return &ent.Role{ID: r}, nil
-					},
-				)
-				if err != nil {
-					return nil, err
-				}
-				create.AddRoles(roles...)
-			}
-			if request.Body.Attr != nil {
-				create.SetAttr(userAttrToMap(*request.Body.Attr))
-			}
-			return create.Save(ctx)
+			return createUser(
+				qc, tx.User.Create(), CreateUserJSONBody(*request.Body),
+			)
 		},
 	)
 	if err != nil {
@@ -100,4 +73,39 @@ func (s Server) CreateUser(
 		res.Email = &email
 	}
 	return res, nil
+}
+
+func createUser(
+	qc context.Context, tx *ent.UserCreate, data CreateUserJSONBody,
+) (*ent.User, error) {
+	create := tx.SetUsername(data.Username)
+	if err := validatePassword(data.Password); err != nil {
+		return nil, err
+	}
+	// TODO use a hasher predicate function config instead of hardcoding
+	hash, err := utils.HashPassword(data.Password)
+	if err != nil {
+		return nil, err
+	}
+	create.SetPassword(hash)
+	if data.Email != nil {
+		create.SetEmail(string(*data.Email))
+	}
+	if data.Roles != nil && len(*data.Roles) > 0 {
+		create.AddRoleIDs(*data.Roles...)
+	}
+	if data.Attr != nil {
+		create.SetAttr(userAttrToMap(*data.Attr))
+	}
+	return create.Save(qc)
+}
+
+func validatePassword(password string) error {
+	if !(numChecker.MatchString(password) &&
+		lowercaseChecker.MatchString(password) &&
+		uppercaseChecker.MatchString(password) &&
+		specialChecker.MatchString(password)) {
+		return errPasswordToSimple
+	}
+	return nil
 }
