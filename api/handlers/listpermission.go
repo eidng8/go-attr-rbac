@@ -11,11 +11,11 @@ import (
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
 
-type ListPermissionTokenPaginateResponse struct {
+type ListPermissionPaginateResponse struct {
 	*paginate.PaginatedList[ent.Permission]
 }
 
-func (response ListPermissionTokenPaginateResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
+func (response ListPermissionPaginateResponse) VisitListPermissionResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	return json.NewEncoder(w).Encode(response)
@@ -32,6 +32,9 @@ func (s Server) ListPermission(
 		return nil, errInvalidContext
 	}
 	query := s.db.Permission.Query().Order(permission.ByID())
+	if request.Params.Name != nil {
+		query = query.Where(permission.NameHasPrefix(*request.Params.Name))
+	}
 	paginator := paginate.Paginator[ent.Permission, ent.PermissionQuery]{
 		BaseUrl:  s.baseUrl,
 		Query:    query,
@@ -42,5 +45,5 @@ func (s Server) ListPermission(
 	if err != nil {
 		return nil, err
 	}
-	return ListPermissionTokenPaginateResponse{PaginatedList: page}, nil
+	return ListPermissionPaginateResponse{PaginatedList: page}, nil
 }
