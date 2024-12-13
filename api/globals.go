@@ -4,7 +4,21 @@ import (
 	"errors"
 	"regexp"
 
+	"github.com/eidng8/go-utils"
 	jsoniter "github.com/json-iterator/go"
+)
+
+// public constants
+const (
+	BaseUrlName    = "BASE_URL"
+	PrivateKeyName = "PRIVATE_KEY"
+	HintSizeName   = "HINT_SIZE"
+	PublicOpsName  = "PUBLIC_OPERATIONS"
+
+	OperationLogin        = "auth:Login"
+	OperationRefreshToken = "auth:RefreshAccessToken"
+	AccessTokenPath       = "/"
+	RefreshTokenPath      = "/access-token/refresh"
 )
 
 // global names
@@ -13,11 +27,20 @@ const (
 	refreshTokenName = "refresh_token"
 )
 
-// drop in replacement for encoding/json
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+// public variables
+var (
+	Log = utils.NewLogger()
+
+	ResponseMessageCredentialNotFound interface{} = "invalid credentials"
+
+	ResponseMessageCredentialsInvalid interface{} = "invalid credentials"
+)
 
 // password validations
 var (
+	// drop in replacement for encoding/json
+	json = jsoniter.ConfigCompatibleWithStandardLibrary
+
 	numChecker       = regexp.MustCompile(`[0-9]+`)
 	uppercaseChecker = regexp.MustCompile(`[A-Z]+`)
 	lowercaseChecker = regexp.MustCompile(`[a-z]+`)
@@ -39,12 +62,13 @@ var (
 	errInvalidHeader   = errors.New("invalid_header")
 	errInvalidToken    = errors.New("invalid_token")
 
+	msgError = "error"
+
 	// Denotes that either part of an assignment request is
 	// invalid (e.g. not found). For example, when assigning a non-existing
 	// role to a user; or a role to non-existing user.
 	msgInvalidAssignment interface{} = "invalid_assignment"
 	msgEmptyRequest      interface{} = "empty_request"
-	msgError                         = "error"
 	msgExists            interface{} = "already_exists"
 	msgNotFound          interface{} = "not_found"
 )
