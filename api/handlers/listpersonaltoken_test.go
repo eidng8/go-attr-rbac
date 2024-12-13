@@ -13,7 +13,7 @@ import (
 )
 
 func Test_ListPersonalToken_returns_10_per_page(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, false)
+	svr, engine, db, res := setupTestCase(t, true)
 	seedPersonalTokens(t, db, 1)
 	expected := ListPersonalTokenPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.PersonalToken]{
@@ -42,7 +42,7 @@ func Test_ListPersonalToken_returns_10_per_page(t *testing.T) {
 }
 
 func Test_ListPersonalToken_returns_5_per_page(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, false)
+	svr, engine, db, res := setupTestCase(t, true)
 	seedPersonalTokens(t, db, 1)
 	expected := ListPersonalTokenPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.PersonalToken]{
@@ -71,7 +71,7 @@ func Test_ListPersonalToken_returns_5_per_page(t *testing.T) {
 }
 
 func Test_ListPersonalToken_returns_2nd_page(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, false)
+	svr, engine, db, res := setupTestCase(t, true)
 	seedPersonalTokens(t, db, 1)
 	expected := ListPersonalTokenPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.PersonalToken]{
