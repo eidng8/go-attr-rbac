@@ -7,7 +7,7 @@
       <env name="CGO_ENABLED" value="1" />
     </envs>
     <kind value="PACKAGE" />
-    <package value="github.com/eidng8/go-attr-rbac/api/handlers" />
+    <package value="github.com/eidng8/go-attr-rbac/api" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$" />
     <framework value="gotest" />
