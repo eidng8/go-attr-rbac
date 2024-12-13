@@ -1,0 +1,3682 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Simple authentication service",
+    "description": "A simple authentication service of hybrid ABAC and RBAC",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/access-token": {
+      "get": {
+        "tags": [
+          "AccessToken"
+        ],
+        "summary": "Validate current access token",
+        "operationId": "checkAccessToken",
+        "responses": {
+          "204": {
+            "description": "Successfully validated access token"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AccessToken"
+        ],
+        "summary": "Revoke current access token",
+        "description": "Revoke current access token and refresh token",
+        "operationId": "revokeAccessToken",
+        "responses": {
+          "204": {
+            "description": "Successfully revoked access token"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/access-token/refresh": {
+      "post": {
+        "tags": [
+          "AccessToken"
+        ],
+        "summary": "Refresh current access token",
+        "description": "Refresh current access token using refresh token",
+        "operationId": "refreshAccessToken",
+        "responses": {
+          "204": {
+            "description": "Successfully refreshed access token"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Authenticate a user and return a token",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Invalidate the user's access token",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Successfully logged out"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/permission/{id}": {
+      "get": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "Find a Permission by ID",
+        "description": "Finds the Permission with the requested ID and returns it.",
+        "operationId": "readPermission",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Permission",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "description": "Username of the user",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permission with requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "Deletes a Permission by ID",
+        "description": "Deletes the Permission with the requested ID.",
+        "operationId": "deletePermission",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Permission",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Permission with requested ID was deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "Updates a Permission",
+        "description": "Updates a Permission and persists changes to storage.",
+        "operationId": "updatePermission",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Permission",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Permission properties to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Permission updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/permissions": {
+      "get": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "List Permissions",
+        "description": "List Permissions.",
+        "operationId": "listPermission",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer",
+              "maximum": 255,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the permission",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PermissionList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "Create a new Permission",
+        "description": "Creates a new Permission and persists it to storage.",
+        "operationId": "createPermission",
+        "requestBody": {
+          "description": "Permission to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Permission created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionCreate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/personal-token/{id}": {
+      "get": {
+        "tags": [
+          "PersonalToken"
+        ],
+        "summary": "Find a PersonalToken by ID",
+        "description": "Finds the PersonalToken with the requested ID and returns it.",
+        "operationId": "readPersonalToken",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the PersonalToken",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PersonalToken with requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalTokenRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PersonalToken"
+        ],
+        "summary": "Deletes a PersonalToken by ID",
+        "description": "Deletes the PersonalToken with the requested ID.",
+        "operationId": "deletePersonalToken",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the PersonalToken",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "PersonalToken with requested ID was deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/personal-tokens": {
+      "get": {
+        "tags": [
+          "PersonalToken"
+        ],
+        "summary": "List PersonalTokens",
+        "description": "List PersonalTokens.",
+        "operationId": "listPersonalToken",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer",
+              "maximum": 255,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of issued personal access tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PersonalTokenList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PersonalToken"
+        ],
+        "summary": "Create a new PersonalToken",
+        "description": "Creates a new PersonalToken and persists it to storage.",
+        "operationId": "createPersonalToken",
+        "requestBody": {
+          "description": "PersonalToken to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "format": "uint64",
+                    "maxLength": 255,
+                    "minLength": 2
+                  },
+                  "ttl": {
+                    "description": "Time to live in seconds",
+                    "type": "integer",
+                    "format": "uint32",
+                    "minimum": 3600
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "description",
+                  "scopes",
+                  "ttl"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "PersonalToken created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalTokenCreate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/ping": {
+      "get": {
+        "summary": "Ping",
+        "description": "Check if the service is running",
+        "operationId": "ping",
+        "responses": {
+          "204": {
+            "description": "Service is running"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/q/permissions": {
+      "get": {
+        "summary": "quick search permissions",
+        "description": "returns a few found permissions with given prefix",
+        "operationId": "hintPermissions",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "text to search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of found permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/q/roles": {
+      "get": {
+        "summary": "quick search roles",
+        "description": "returns a few found roles with given prefix",
+        "operationId": "hintRoles",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "text to search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of found roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/q/users": {
+      "get": {
+        "summary": "quick search users",
+        "description": "returns a few found users with given prefix",
+        "operationId": "hintUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "text to search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of found users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/role/{id}": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Find a Role by ID",
+        "description": "Finds the Role with the requested ID and returns it.",
+        "operationId": "readRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role with requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Deletes a Role by ID",
+        "description": "Deletes the Role with the requested ID.",
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Role with requested ID was deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Updates a Role",
+        "description": "Updates a Role and persists changes to storage.",
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Role properties to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  },
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint64",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/role/{id}/permissions": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "List attached Permissions",
+        "description": "List attached Permissions.",
+        "operationId": "listRolePermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the permission",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of attached role permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Role_PermissionsList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign permissions to role",
+        "operationId": "assignPermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully assigned permissions to role"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/role/{id}/users": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "List attached Users",
+        "description": "List attached Users.",
+        "operationId": "listRoleUsers",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Role",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the user",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of attached role users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Role_UsersList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "List Roles",
+        "description": "List Roles.",
+        "operationId": "listRole",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer",
+              "maximum": 255,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the role",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of attached roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RoleList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Create a new Role",
+        "description": "Creates a new Role and persists it to storage.",
+        "operationId": "createRole",
+        "requestBody": {
+          "description": "Role to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  },
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint64",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Role created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleCreate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/user/{id}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Find a User by ID",
+        "description": "Finds the User with the requested ID and returns it.",
+        "operationId": "readUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the User",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "trashed",
+            "in": "query",
+            "description": "Whether to include trashed items",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User with requested ID was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Deletes a User by ID",
+        "description": "Deletes the User with the requested ID.",
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the User",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "trashed",
+            "in": "query",
+            "description": "Whether to include trashed items",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User with requested ID was deleted"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Updates a User",
+        "description": "Updates a User and persists changes to storage.",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the User",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "User properties to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "attr": {
+                    "type": "object",
+                    "properties": {
+                      "dept": {
+                        "summary": "Department ID",
+                        "type": "integer",
+                        "format": "uint32",
+                        "minimum": 1
+                      },
+                      "level": {
+                        "summary": "Security Clarence Level",
+                        "type": "integer",
+                        "format": "uint8",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "dept",
+                      "level"
+                    ]
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "User updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "422": {
+            "$ref": "#/components/responses/422"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/user/{id}/restore": {
+      "post": {
+        "summary": "Restore a trashed record",
+        "description": "Restore a record that was previously soft deleted",
+        "operationId": "restoreUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the User",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Record with requested ID was restored"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/user/{id}/roles": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "List attached Roles",
+        "description": "List attached Roles.",
+        "operationId": "listUserRoles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the User",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the role",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of attached user roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User_RolesList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign roles to user",
+        "operationId": "assignRoles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the user",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully assigned roles to user"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "List Users",
+        "description": "List Users.",
+        "operationId": "listUser",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer",
+              "maximum": 255,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Name of the user",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of attached users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "description": "Page number (1-based)",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "total": {
+                      "description": "Total number of items",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "per_page": {
+                      "description": "Number of items per page",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "last_page": {
+                      "description": "Last page number",
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "from": {
+                      "description": "Index (1-based) of the first item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "description": "Index (1-based) of the last item in the current page",
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "first_page_url": {
+                      "description": "URL to the first page",
+                      "type": "string"
+                    },
+                    "last_page_url": {
+                      "description": "URL to the last page",
+                      "type": "string"
+                    },
+                    "next_page_url": {
+                      "description": "URL to the next page",
+                      "type": "string"
+                    },
+                    "prev_page_url": {
+                      "description": "URL to the previous page",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Base path of the request",
+                      "type": "string"
+                    },
+                    "data": {
+                      "description": "List of items",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserList"
+                      }
+                    }
+                  },
+                  "required": [
+                    "current_page",
+                    "total",
+                    "per_page",
+                    "last_page",
+                    "from",
+                    "to",
+                    "first_page_url",
+                    "last_page_url",
+                    "next_page_url",
+                    "prev_page_url",
+                    "path",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Create a new User",
+        "description": "Creates a new User and persists it to storage.",
+        "operationId": "createUser",
+        "requestBody": {
+          "description": "User to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "attr": {
+                    "type": "object",
+                    "properties": {
+                      "dept": {
+                        "summary": "Department ID",
+                        "type": "integer",
+                        "format": "uint32",
+                        "minimum": 1
+                      },
+                      "level": {
+                        "summary": "Security Clarence Level",
+                        "type": "integer",
+                        "format": "uint8",
+                        "minimum": 1
+                      }
+                    },
+                    "required": [
+                      "dept",
+                      "level"
+                    ]
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "uint32",
+                      "minimum": 1
+                    }
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "maxLength": 72,
+                    "minLength": 8
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreate"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "id",
+          "user_id"
+        ]
+      },
+      "AccessTokenCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id"
+        ]
+      },
+      "AccessTokenList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id"
+        ]
+      },
+      "AccessTokenRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id"
+        ]
+      },
+      "AccessTokenUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id"
+        ]
+      },
+      "LongLivedToken": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "name",
+          "token"
+        ]
+      },
+      "Permission": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PermissionCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PermissionList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PermissionRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PermissionUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PersonalToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "format": "uint64",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "description"
+        ]
+      },
+      "PersonalTokenCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "format": "uint64",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "description",
+          "token"
+        ]
+      },
+      "PersonalTokenList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "format": "uint64",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "description"
+        ]
+      },
+      "PersonalTokenRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "format": "uint64",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "description"
+        ]
+      },
+      "PersonalTokenUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "format": "uint64",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "description"
+        ]
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "RoleCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "RoleList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "RoleRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "RoleUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Role_PermissionsList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Role_UsersList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
+          },
+          "access_tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessToken"
+            }
+          },
+          "refresh_tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessToken"
+            }
+          },
+          "personal_tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonalToken"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "UserCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "UserList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "UserRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "description": "Date and time when the record was deleted",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "attr": {
+            "type": "object",
+            "properties": {
+              "dept": {
+                "summary": "Department ID",
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 1
+              },
+              "level": {
+                "summary": "Security Clarence Level",
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "dept",
+              "level"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ]
+      },
+      "User_RolesList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      }
+    },
+    "responses": {
+      "400": {
+        "description": "invalid input, data invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "409": {
+        "description": "conflicting resources",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "422": {
+        "description": "Unprocessable Entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "unexpected error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "errors": {}
+              },
+              "required": [
+                "code",
+                "status"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

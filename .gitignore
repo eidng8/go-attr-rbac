@@ -1,17 +1,6 @@
 *.bak
-ent/*
-ent/migrate/*
 tools/*.gen.go
 client/tools/*.gen.go
-
-!ent/errors.go
-!ent/db.go
-!ent/schema/
-!ent/schema/**
-!ent/migrate/
-!ent/migrate/migrations/
-!ent/migrate/main.go
-!ent/migrate/migrations/**
 
 ### Intellij template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
