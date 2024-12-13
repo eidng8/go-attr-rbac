@@ -160,7 +160,7 @@ func Test_ListUser_returns_500_if_invalid_context(t *testing.T) {
 	require.ErrorIs(t, err, errInvalidContext)
 }
 
-func Test_ListUsers_returns_401_if_non_user(t *testing.T) {
+func Test_ListUser_returns_401_if_non_user(t *testing.T) {
 	svr, engine, _, res := setupTestCase(t, false)
 	req, err := svr.get("/users")
 	require.Nil(t, err)
@@ -168,11 +168,21 @@ func Test_ListUsers_returns_401_if_non_user(t *testing.T) {
 	require.Equal(t, http.StatusUnauthorized, res.Code)
 }
 
-func Test_ListUsers_returns_403_if_user_without_permission(t *testing.T) {
+func Test_ListUser_returns_403_if_user_without_permission(t *testing.T) {
 	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 3)
 	req, err := svr.getAs(u, "/users")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusForbidden, res.Code)
+}
+
+func Test_ListUser_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.getAs(u, "/users")
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

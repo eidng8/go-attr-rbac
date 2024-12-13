@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent/role"
 )
 
@@ -17,6 +18,7 @@ func (s Server) HintRoles(
 		Where(role.NameHasPrefix(request.Params.Q)).
 		All(context.Background())
 	if err != nil {
+		api.Log.Debugf("HintRoles error: %v", err)
 		return nil, err
 	}
 	list := make(HintRoles200JSONResponse, len(rows))

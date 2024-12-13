@@ -289,9 +289,20 @@ func Test_CreateUser_reports_400_if_user_exists(t *testing.T) {
 	require.Equal(t, 400, res.Code)
 	expected := map[string]interface{}{
 		"code":   http.StatusBadRequest,
-		"errors": "user already exists",
-		"status": "error",
+		"errors": msgExists,
+		"status": msgError,
 	}
 	requireJsonEqualsString(t, expected, res.Body.String())
 	require.Equal(t, count, db.User.Query().CountX(context.Background()))
+}
+
+func Test_CreateUser_returns_500_if_db_error_unhandled(t *testing.T) {
+	body := CreateUserJSONBody{Username: "root", Password: "Abcd_1234"}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/users", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

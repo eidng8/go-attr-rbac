@@ -30,24 +30,23 @@ func (s Server) CreatePersonalToken(
 		time.Second*time.Duration(request.Body.Ttl),
 	)
 	if err != nil {
+		api.Log.Debugf("CreatePersonalToken error: %v", err)
 		return nil, err
 	}
 	bin, err := uuid7.MarshalBinary()
 	if err != nil {
+		api.Log.Debugf("CreatePersonalToken error: %v", err)
 		return nil, err
 	}
 	t, err := s.db.Transaction(
 		context.Background(),
 		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
-			t, err := tx.PersonalToken.Create().SetUserID(at.user.ID).
-				SetToken(bin).SetDescription(request.Body.Description).Save(ctx)
-			if err != nil {
-				return nil, err
-			}
-			return t, nil
+			return tx.PersonalToken.Create().SetUserID(at.user.ID).
+				SetToken(bin).SetDescription(request.Body.Description).Save(qc)
 		},
 	)
 	if err != nil {
+		api.Log.Debugf("CreatePersonalToken error: %v", err)
 		return nil, err
 	}
 	tt := t.(*ent.PersonalToken)

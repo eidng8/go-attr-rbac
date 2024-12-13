@@ -8,6 +8,7 @@ import (
 	"github.com/eidng8/go-utils"
 	"github.com/oapi-codegen/runtime/types"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -70,6 +71,7 @@ func createUser(
 	// TODO use a hasher predicate function config instead of hardcoding
 	hash, err := utils.HashPassword(data.Password)
 	if err != nil {
+		api.Log.Debugf("createUser error: %v", err)
 		return nil, err
 	}
 	create.SetPassword(hash)

@@ -62,3 +62,13 @@ func Test_DeleteRole_reports_422_if_invalid_id(t *testing.T) {
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 422, res.Code)
 }
+
+func Test_DeleteRole_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.deleteAs(u, "/role/2")
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+}

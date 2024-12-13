@@ -145,9 +145,20 @@ func Test_CreateRole_reports_400_if_role_exists(t *testing.T) {
 	require.Equal(t, 400, res.Code)
 	expected := map[string]interface{}{
 		"code":   http.StatusBadRequest,
-		"errors": "role `root` already exists",
-		"status": "error",
+		"errors": msgExists,
+		"status": msgError,
 	}
 	requireJsonEqualsString(t, expected, res.Body.String())
 	require.Equal(t, count, db.Role.Query().CountX(context.Background()))
+}
+
+func Test_CreateRole_returns_500_if_db_error_unhandled(t *testing.T) {
+	body := CreateRoleJSONBody{Name: "test_role"}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/roles", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
 }

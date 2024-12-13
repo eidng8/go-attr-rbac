@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 	"github.com/eidng8/go-attr-rbac/ent/permission"
 )
@@ -18,6 +19,7 @@ func (s Server) ReadPermission(
 		if ent.IsNotFound(err) {
 			return ReadPermission404JSONResponse{}, nil
 		}
+		api.Log.Debugf("ReadPermission error: %v", err)
 		return nil, err
 	}
 	return ReadPermission200JSONResponse{

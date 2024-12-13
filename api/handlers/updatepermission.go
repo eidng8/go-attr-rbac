@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -50,6 +51,7 @@ func (s Server) UpdatePermission(
 				},
 			}, nil
 		}
+		api.Log.Debugf("UpdatePermission error: %v", err)
 		return nil, err
 	}
 	perm := p.(*ent.Permission)

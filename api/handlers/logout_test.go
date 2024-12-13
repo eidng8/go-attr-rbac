@@ -111,3 +111,13 @@ func Test_Logout_clears_current_tokens(t *testing.T) {
 	engine.ServeHTTP(resc, reqc)
 	require.Equal(t, http.StatusUnauthorized, resc.Code)
 }
+
+func Test_Logout_returns_500_if_db_error_unhandled(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.postAs(u, "/logout", nil)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+}

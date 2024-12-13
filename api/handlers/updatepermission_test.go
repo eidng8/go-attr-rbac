@@ -148,3 +148,15 @@ func Test_UpdatePermission_reports_404_if_permission_not_exists(t *testing.T) {
 	engine.ServeHTTP(res, req)
 	require.Equal(t, 404, res.Code)
 }
+
+func Test_UpdatePermission_returns_500_if_db_error_unhandled(t *testing.T) {
+	name := "test_permission"
+	body := UpdatePermissionJSONBody{Name: &name}
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 1)
+	req, err := svr.patchAs(u, "/permission/2", body)
+	require.Nil(t, err)
+	svr.db = useEmptyDb(t)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusInternalServerError, res.Code)
+}

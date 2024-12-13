@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -29,6 +30,7 @@ func (s Server) DeleteRole(
 				},
 			}, nil
 		}
+		api.Log.Debugf("DeleteRole error: %v", err)
 		return nil, err
 	}
 	return DeleteRole204Response{}, nil

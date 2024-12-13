@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
 )
 
@@ -55,6 +56,7 @@ func (s Server) UpdateRole(
 				},
 			}, nil
 		}
+		api.Log.Debugf("UpdateRole error: %v", err)
 		return nil, err
 	}
 	ro := r.(*ent.Role)
