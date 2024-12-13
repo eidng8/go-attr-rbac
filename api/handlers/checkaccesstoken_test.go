@@ -15,7 +15,7 @@ import (
 )
 
 func Test_CheckAccessToken_returns_204_for_valid_token(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr, err := db.User.Query().WithRoles().Where(user.IDEQ(1)).
 		Only(context.Background())
 	require.Nil(t, err)
@@ -26,7 +26,7 @@ func Test_CheckAccessToken_returns_204_for_valid_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_204_for_valid_bearer_token(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr, err := db.User.Query().WithRoles().Where(user.IDEQ(1)).
 		Only(context.Background())
 	require.Nil(t, err)
@@ -40,7 +40,7 @@ func Test_CheckAccessToken_returns_204_for_valid_bearer_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_no_token(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
+	svr, engine, _, res := setupTestCase(t, false)
 	req, err := svr.get("/access-token")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -48,7 +48,7 @@ func Test_CheckAccessToken_returns_401_if_no_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_no_token_role_is_null(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 1)
 	req, err := svr.getAs(usr, "/access-token")
 	require.Nil(t, err)
@@ -57,7 +57,7 @@ func Test_CheckAccessToken_returns_401_if_no_token_role_is_null(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_no_token_role_mismatch(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 1)
 	roles, err := db.Role.Query().Limit(3).All(context.Background())
 	require.Nil(t, err)
@@ -70,7 +70,7 @@ func Test_CheckAccessToken_returns_401_if_no_token_role_mismatch(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_header(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, err := svr.issueAccessToken(usr)
 	require.Nil(t, err)
@@ -82,7 +82,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_header(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_bearer_token(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, err := svr.issueAccessToken(usr)
 	require.Nil(t, err)
@@ -94,7 +94,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_bearer_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_jti(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -109,7 +109,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_jti(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_subject(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -124,7 +124,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_subject(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_issuer(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -139,7 +139,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_issuer(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_audience(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -154,7 +154,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_audience(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_premature_token(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -169,7 +169,7 @@ func Test_CheckAccessToken_returns_401_if_premature_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_expired_token(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 2)
 	_, claims, err := svr.buildTokenClaims(usr, 3600)
 	require.Nil(t, err)
@@ -184,7 +184,7 @@ func Test_CheckAccessToken_returns_401_if_expired_token(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_500_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
+	svr, _, _, _ := setupTestCase(t, false)
 	_, err := svr.CheckAccessToken(
 		context.Background(), CheckAccessTokenRequestObject{},
 	)
@@ -192,7 +192,7 @@ func Test_CheckAccessToken_returns_500_if_invalid_context(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_cookie(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
+	svr, engine, _, res := setupTestCase(t, false)
 	req, err := svr.get("/access-token")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -212,7 +212,7 @@ func Test_CheckAccessToken_returns_401_if_invalid_cookie(t *testing.T) {
 }
 
 func Test_CheckAccessToken_returns_403_if_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	usr := getUserById(t, db, 3)
 	req, err := svr.getAs(usr, "/access-token")
 	require.Nil(t, err)
@@ -221,7 +221,7 @@ func Test_CheckAccessToken_returns_403_if_user_without_permission(t *testing.T) 
 }
 
 func Test_CheckAccessToken_returns_401_if_invalid_context_token(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
+	svr, engine, _, res := setupTestCase(t, false)
 	r, err := svr.CheckAccessToken(
 		gin.CreateTestContextOnly(res, engine),
 		CheckAccessTokenRequestObject{},

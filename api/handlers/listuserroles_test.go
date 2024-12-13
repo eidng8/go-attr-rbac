@@ -13,7 +13,7 @@ import (
 )
 
 func Test_ListUserRoles_returns_1st_page(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserRolesPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.Role]{
 			Total:        1,
@@ -41,7 +41,7 @@ func Test_ListUserRoles_returns_1st_page(t *testing.T) {
 }
 
 func Test_ListUserRoles_filters_by_name(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserRolesPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.Role]{
 			Total:        1,
@@ -68,9 +68,26 @@ func Test_ListUserRoles_filters_by_name(t *testing.T) {
 }
 
 func Test_ListUserRoles_returns_500_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
+	svr, _, _, _ := setupTestCase(t, false)
 	_, err := svr.ListUserRoles(
 		context.Background(), ListUserRolesRequestObject{},
 	)
 	require.ErrorIs(t, err, errInvalidContext)
+}
+
+func Test_ListUserRoles_returns_401_if_non_user(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
+	req, err := svr.get("/user/1/roles")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+}
+
+func Test_ListUserRoles_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 3)
+	req, err := svr.getAs(u, "/user/1/roles")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusForbidden, res.Code)
 }

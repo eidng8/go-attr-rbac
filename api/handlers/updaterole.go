@@ -16,12 +16,11 @@ func (s Server) UpdateRole(
 	if nil == request.Body.Name && nil == request.Body.Description &&
 		(nil == request.Body.Permissions || len(*request.Body.Permissions) == 0) &&
 		(nil == request.Body.Users || len(*request.Body.Users) == 0) {
-		var s interface{} = "empty request"
 		return UpdateRole422JSONResponse{
 			N422JSONResponse: N422JSONResponse{
 				Code:   http.StatusUnprocessableEntity,
-				Status: "error",
-				Errors: &s,
+				Status: msgError,
+				Errors: &msgEmptyRequest,
 			},
 		}, nil
 	}
@@ -48,12 +47,11 @@ func (s Server) UpdateRole(
 	)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			var s interface{} = "not found"
 			return UpdateRole404JSONResponse{
 				N404JSONResponse: N404JSONResponse{
 					Code:   http.StatusNotFound,
-					Status: "error",
-					Errors: &s,
+					Status: msgError,
+					Errors: &msgNotFound,
 				},
 			}, nil
 		}

@@ -15,7 +15,7 @@ import (
 func Test_UpdatePermission_updates_name(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.Permission.Query().Where(permission.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -41,7 +41,7 @@ func Test_UpdatePermission_updates_name(t *testing.T) {
 func Test_UpdatePermission_updates_description(t *testing.T) {
 	desc := "test_permission"
 	body := UpdatePermissionJSONBody{Description: &desc}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.Permission.Query().Where(permission.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -66,7 +66,7 @@ func Test_UpdatePermission_updates_description(t *testing.T) {
 
 func Test_UpdatePermission_updates_a_permission_replaces_roles(t *testing.T) {
 	body := UpdatePermissionJSONBody{Roles: &[]uint32{5, 6}}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/permission/2", body)
 	require.Nil(t, err)
@@ -82,10 +82,10 @@ func Test_UpdatePermission_updates_a_permission_replaces_roles(t *testing.T) {
 	)
 }
 
-func Test_UpdatePermission_denies_non_user(t *testing.T) {
+func Test_UpdatePermission_returns_401_if_non_user(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Permission.Query().Where(permission.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -105,10 +105,10 @@ func Test_UpdatePermission_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_UpdatePermission_denies_user_without_permission(t *testing.T) {
+func Test_UpdatePermission_returns_403_if_user_without_permission(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Permission.Query().Where(permission.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -130,7 +130,7 @@ func Test_UpdatePermission_denies_user_without_permission(t *testing.T) {
 }
 
 func Test_UpdatePermission_reports_422_if_request_empty(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/permission/2", UpdatePermissionJSONBody{})
 	require.Nil(t, err)
@@ -141,7 +141,7 @@ func Test_UpdatePermission_reports_422_if_request_empty(t *testing.T) {
 func Test_UpdatePermission_reports_404_if_permission_not_exists(t *testing.T) {
 	name := "test_permission"
 	body := UpdatePermissionJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/permission/12345", body)
 	require.Nil(t, err)

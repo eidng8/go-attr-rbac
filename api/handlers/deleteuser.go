@@ -25,12 +25,11 @@ func (s Server) DeleteUser(
 	)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			var s interface{} = "not found"
 			return DeleteUser404JSONResponse{
 				N404JSONResponse: N404JSONResponse{
 					Code:   http.StatusNotFound,
-					Status: "error",
-					Errors: &s,
+					Status: msgError,
+					Errors: &msgNotFound,
 				},
 			}, nil
 		}

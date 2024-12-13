@@ -13,7 +13,7 @@ import (
 )
 
 func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
 	require.Nil(t, err)
@@ -113,7 +113,7 @@ func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
 }
 
 func Test_RevokeAccessToken_returns_401_if_invalid_access_token(t *testing.T) {
-	svr, engine, _, res := setup(t, true)
+	svr, engine, _, res := setupTestCase(t, true)
 	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
 	require.Nil(t, err)
 	req.AddCookie(
@@ -133,7 +133,7 @@ func Test_RevokeAccessToken_returns_401_if_invalid_access_token(t *testing.T) {
 }
 
 func Test_RevokeAccessToken_returns_401_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
+	svr, _, _, _ := setupTestCase(t, false)
 	res, err := svr.RevokeAccessToken(
 		context.Background(), RevokeAccessTokenRequestObject{},
 	)

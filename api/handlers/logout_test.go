@@ -13,7 +13,7 @@ import (
 )
 
 func Test_Logout_clears_current_tokens(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := http.NewRequest(http.MethodPost, "/logout", nil)
 	require.Nil(t, err)

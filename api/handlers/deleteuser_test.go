@@ -12,7 +12,7 @@ import (
 )
 
 func Test_DeleteUser_soft_deletes_a_user(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/2")
 	require.Nil(t, err)
@@ -32,7 +32,7 @@ func Test_DeleteUser_soft_deletes_a_user(t *testing.T) {
 }
 
 func Test_DeleteUser_physically_deletes_a_user(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/2?trashed=1")
@@ -49,8 +49,8 @@ func Test_DeleteUser_physically_deletes_a_user(t *testing.T) {
 	)
 }
 
-func Test_DeleteUser_denies_non_user(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+func Test_DeleteUser_returns_401_if_non_user(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
 	req, err := svr.delete("/user/2")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -60,8 +60,8 @@ func Test_DeleteUser_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_DeleteUser_denies_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+func Test_DeleteUser_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 2)
 	req, err := svr.deleteAs(u, "/user/2")
 	require.Nil(t, err)
@@ -73,7 +73,7 @@ func Test_DeleteUser_denies_user_without_permission(t *testing.T) {
 }
 
 func Test_DeleteUser_reports_404_if_user_not_exists(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/12345")
 	require.Nil(t, err)
@@ -82,7 +82,7 @@ func Test_DeleteUser_reports_404_if_user_not_exists(t *testing.T) {
 }
 
 func Test_DeleteUser_reports_404_if_user_was_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/2")
@@ -92,7 +92,7 @@ func Test_DeleteUser_reports_404_if_user_was_soft_deleted(t *testing.T) {
 }
 
 func Test_DeleteUser_reports_422_if_invalid_id(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/a")
 	require.Nil(t, err)

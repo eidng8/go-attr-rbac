@@ -19,7 +19,7 @@ import (
 func Test_UpdateUser_updates_email(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.User.Query().Where(user.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -47,7 +47,7 @@ func Test_UpdateUser_updates_email(t *testing.T) {
 func Test_UpdateUser_updates_a_user_with_attr(t *testing.T) {
 	attr := userAttrOf(321, 123)
 	body := UpdateUserJSONBody{Attr: attr}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.User.Query().Where(user.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -71,7 +71,7 @@ func Test_UpdateUser_updates_a_user_with_attr(t *testing.T) {
 
 func Test_UpdateUser_updates_a_user_replaces_roles(t *testing.T) {
 	body := UpdateUserJSONBody{Roles: &[]uint32{5, 6}}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/2", body)
 	require.Nil(t, err)
@@ -87,10 +87,10 @@ func Test_UpdateUser_updates_a_user_replaces_roles(t *testing.T) {
 	)
 }
 
-func Test_UpdateUser_denies_non_user(t *testing.T) {
+func Test_UpdateUser_returns_401_if_non_user(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.User.Query().Where(user.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -108,10 +108,10 @@ func Test_UpdateUser_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_UpdateUser_denies_user_without_permission(t *testing.T) {
+func Test_UpdateUser_returns_403_if_user_without_permission(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.User.Query().Where(user.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -131,7 +131,7 @@ func Test_UpdateUser_denies_user_without_permission(t *testing.T) {
 }
 
 func Test_UpdateUser_reports_422_if_email_malformed(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.User.Query().Where(user.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -172,7 +172,7 @@ func Test_UpdateUser_reports_422_if_email_malformed(t *testing.T) {
 func Test_UpdateUser_reports_422_if_dept_invalid(t *testing.T) {
 	attr := userAttrOf(0, 0)
 	body := UpdateUserJSONBody{Attr: attr}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.User.Query().Where(user.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -195,7 +195,7 @@ func Test_UpdateUser_reports_422_if_dept_invalid(t *testing.T) {
 func Test_UpdateUser_reports_422_if_level_invalid(t *testing.T) {
 	attr := userAttrOf(1, 0)
 	body := UpdateUserJSONBody{Attr: attr}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.User.Query().Where(user.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -216,7 +216,7 @@ func Test_UpdateUser_reports_422_if_level_invalid(t *testing.T) {
 }
 
 func Test_UpdateUser_reports_422_if_request_empty(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/2", UpdateUserJSONBody{})
 	require.Nil(t, err)
@@ -227,7 +227,7 @@ func Test_UpdateUser_reports_422_if_request_empty(t *testing.T) {
 func Test_UpdateUser_reports_404_if_user_not_exists(t *testing.T) {
 	email := types.Email("test@example.com")
 	body := UpdateUserJSONBody{Email: &email}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/user/12345", body)
 	require.Nil(t, err)

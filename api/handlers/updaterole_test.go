@@ -17,7 +17,7 @@ import (
 func Test_UpdateRole_updates_a_role(t *testing.T) {
 	name := "test_role"
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.Role.Query().Where(role.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -42,7 +42,7 @@ func Test_UpdateRole_updates_a_role(t *testing.T) {
 func Test_UpdateRole_updates_a_role_with_description(t *testing.T) {
 	desc := "test descriptions"
 	body := UpdateRoleJSONBody{Description: &desc}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	expected, err := db.Role.Query().Where(role.IDEQ(2)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -66,7 +66,7 @@ func Test_UpdateRole_updates_a_role_with_description(t *testing.T) {
 
 func Test_UpdateRole_updates_a_role_replaces_permissions(t *testing.T) {
 	body := UpdateRoleJSONBody{Permissions: &[]uint32{5, 6}}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/role/2", body)
 	require.Nil(t, err)
@@ -84,7 +84,7 @@ func Test_UpdateRole_updates_a_role_replaces_permissions(t *testing.T) {
 
 func Test_UpdateRole_updates_a_role_replaces_users(t *testing.T) {
 	body := UpdateRoleJSONBody{Users: &[]uint64{5, 6}}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/role/2", body)
 	require.Nil(t, err)
@@ -100,10 +100,10 @@ func Test_UpdateRole_updates_a_role_replaces_users(t *testing.T) {
 	)
 }
 
-func Test_UpdateRole_denies_non_user(t *testing.T) {
+func Test_UpdateRole_returns_401_if_non_user(t *testing.T) {
 	name := "test name"
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Role.Query().Where(role.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -121,10 +121,10 @@ func Test_UpdateRole_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_UpdateRole_denies_user_without_permission(t *testing.T) {
+func Test_UpdateRole_returns_403_if_user_without_permission(t *testing.T) {
 	name := "test name"
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Role.Query().Where(role.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -146,7 +146,7 @@ func Test_UpdateRole_denies_user_without_permission(t *testing.T) {
 func Test_UpdateRole_reports_422_if_name_too_short(t *testing.T) {
 	name := ""
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Role.Query().Where(role.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -171,7 +171,7 @@ func Test_UpdateRole_reports_422_if_name_too_short(t *testing.T) {
 func Test_UpdateRole_reports_422_if_name_too_long(t *testing.T) {
 	name := strings.Repeat("a", 256)
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Role.Query().Where(role.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -197,7 +197,7 @@ func Test_UpdateRole_reports_422_if_name_too_long(t *testing.T) {
 func Test_UpdateRole_reports_422_if_description_too_long(t *testing.T) {
 	desc := strings.Repeat("a", 256)
 	body := UpdateRoleJSONBody{Description: &desc}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected, err := db.Role.Query().Where(role.IDEQ(3)).
 		First(context.Background())
 	require.Nil(t, err)
@@ -221,7 +221,7 @@ func Test_UpdateRole_reports_422_if_description_too_long(t *testing.T) {
 }
 
 func Test_UpdateRole_reports_422_if_request_empty(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/role/2", UpdateRoleJSONBody{})
 	require.Nil(t, err)
@@ -232,7 +232,7 @@ func Test_UpdateRole_reports_422_if_request_empty(t *testing.T) {
 func Test_UpdateRole_reports_404_if_role_not_exists(t *testing.T) {
 	name := "test name"
 	body := UpdateRoleJSONBody{Name: &name}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.patchAs(u, "/role/12345", body)
 	require.Nil(t, err)

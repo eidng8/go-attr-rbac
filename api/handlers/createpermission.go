@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/eidng8/go-attr-rbac/ent"
@@ -26,14 +25,11 @@ func (s Server) CreatePermission(
 	)
 	if err != nil {
 		if ent.IsUniqueKeyError(err) {
-			var s interface{} = fmt.Sprintf(
-				"permission `%s` already exists", request.Body.Name,
-			)
 			return CreatePermission400JSONResponse{
 				N400JSONResponse: N400JSONResponse{
 					Code:   http.StatusBadRequest,
-					Errors: &s,
-					Status: "error",
+					Errors: &msgExists,
+					Status: msgError,
 				},
 			}, nil
 		}

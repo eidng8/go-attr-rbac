@@ -13,7 +13,7 @@ import (
 )
 
 func Test_ListUser_returns_10_per_page(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.User]{
 			Total:        11,
@@ -41,7 +41,7 @@ func Test_ListUser_returns_10_per_page(t *testing.T) {
 }
 
 func Test_ListUser_returns_5_per_page(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.User]{
 			Total:        11,
@@ -69,7 +69,7 @@ func Test_ListUser_returns_5_per_page(t *testing.T) {
 }
 
 func Test_ListUser_returns_2nd_page(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.User]{
 			Total:        11,
@@ -97,7 +97,7 @@ func Test_ListUser_returns_2nd_page(t *testing.T) {
 }
 
 func Test_ListUser_filters_by_username(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.User]{
 			Total:        10,
@@ -126,7 +126,7 @@ func Test_ListUser_filters_by_username(t *testing.T) {
 }
 
 func Test_ListUser_filters_by_email(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	expected := ListUserPaginateResponse{
 		PaginatedList: &paginate.PaginatedList[ent.User]{
 			Total:        10,
@@ -155,7 +155,24 @@ func Test_ListUser_filters_by_email(t *testing.T) {
 }
 
 func Test_ListUser_returns_500_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
+	svr, _, _, _ := setupTestCase(t, false)
 	_, err := svr.ListUser(context.Background(), ListUserRequestObject{})
 	require.ErrorIs(t, err, errInvalidContext)
+}
+
+func Test_ListUsers_returns_401_if_non_user(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
+	req, err := svr.get("/users")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+}
+
+func Test_ListUsers_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 3)
+	req, err := svr.getAs(u, "/users")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusForbidden, res.Code)
 }

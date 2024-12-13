@@ -4,25 +4,11 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"regexp"
 
 	"github.com/eidng8/go-utils"
 	"github.com/oapi-codegen/runtime/types"
 
 	"github.com/eidng8/go-attr-rbac/ent"
-)
-
-var (
-	numChecker       = regexp.MustCompile(`[0-9]+`)
-	uppercaseChecker = regexp.MustCompile(`[A-Z]+`)
-	lowercaseChecker = regexp.MustCompile(`[a-z]+`)
-	specialChecker   = regexp.MustCompile(`[#?!@$%^&*-_]+`)
-
-	errPasswordToSimple = errors.New(
-		"password must contain at least 8 characters, " +
-			"including uppercase, lowercase, number, and special characters" +
-			" (#?!@$%^&*-_)",
-	)
 )
 
 // CreateUser creates a user.
@@ -41,12 +27,11 @@ func (s Server) CreateUser(
 	)
 	if err != nil {
 		if ent.IsUniqueKeyError(err) {
-			var s interface{} = "user already exists"
 			return CreateUser400JSONResponse{
 				N400JSONResponse: N400JSONResponse{
 					Code:   http.StatusBadRequest,
-					Errors: &s,
-					Status: "error",
+					Errors: &msgExists,
+					Status: msgError,
 				},
 			}, nil
 		} else if errors.Is(err, errPasswordToSimple) {
@@ -55,7 +40,7 @@ func (s Server) CreateUser(
 				N400JSONResponse: N400JSONResponse{
 					Code:   http.StatusBadRequest,
 					Errors: &s,
-					Status: "error",
+					Status: msgError,
 				},
 			}, nil
 		}

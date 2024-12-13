@@ -195,6 +195,7 @@ func addRoleOperations(s *ogen.Spec) {
 			"400": {Ref: "#/components/responses/400"},
 			"401": {Ref: "#/components/responses/401"},
 			"403": {Ref: "#/components/responses/403"},
+			"404": {Ref: "#/components/responses/404"},
 			"500": {Ref: "#/components/responses/500"},
 		},
 	}
@@ -236,6 +237,7 @@ func addRoleOperations(s *ogen.Spec) {
 			"400": {Ref: "#/components/responses/400"},
 			"401": {Ref: "#/components/responses/401"},
 			"403": {Ref: "#/components/responses/403"},
+			"404": {Ref: "#/components/responses/404"},
 			"500": {Ref: "#/components/responses/500"},
 		},
 	}

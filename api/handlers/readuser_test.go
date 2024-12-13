@@ -10,7 +10,7 @@ import (
 )
 
 func Test_ReadUser_returns_a_user(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2")
 	require.Nil(t, err)
@@ -23,7 +23,7 @@ func Test_ReadUser_returns_a_user(t *testing.T) {
 }
 
 func Test_ReadUser_returns_trashed_user(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2?trashed=1")
@@ -37,7 +37,7 @@ func Test_ReadUser_returns_trashed_user(t *testing.T) {
 }
 
 func Test_ReadUser_returns_404_if_not_found(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/12345")
 	require.Nil(t, err)
@@ -46,7 +46,7 @@ func Test_ReadUser_returns_404_if_not_found(t *testing.T) {
 }
 
 func Test_ReadUser_returns_404_if_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2")
@@ -56,7 +56,7 @@ func Test_ReadUser_returns_404_if_soft_deleted(t *testing.T) {
 }
 
 func Test_ReadUser_returns_a_user_without_email(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	n := db.User.Create().SetUsername("test user").SetPassword("test password").
 		SaveX(context.Background())
 	u := getUserById(t, db, 1)
@@ -68,4 +68,21 @@ func Test_ReadUser_returns_a_user_without_email(t *testing.T) {
 	require.Equal(t, n.ID, actual.Id)
 	require.Equal(t, "test user", actual.Username)
 	require.Nil(t, actual.Email)
+}
+
+func Test_ReadUser_returns_401_if_non_user(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
+	req, err := svr.get("/user/2")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+}
+
+func Test_ReadUser_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 3)
+	req, err := svr.getAs(u, "/user/2")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusForbidden, res.Code)
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func Test_Login_sets_cookies(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	email := types.Email("test@sample.com")
 	u, err := createUser(
 		context.Background(), db.User.Create(), CreateUserJSONBody{

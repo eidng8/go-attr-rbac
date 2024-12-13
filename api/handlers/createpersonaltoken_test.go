@@ -17,7 +17,7 @@ func Test_CreatePersonalToken_creates_a_personal_token(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Scopes: []string{"read", "write"}, Ttl: 3600,
 	}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/personal-tokens", body)
 	require.Nil(t, err)
@@ -49,7 +49,7 @@ func Test_CreatePersonalToken_returns_401_if_non_user(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Scopes: []string{"read", "write"}, Ttl: 3600,
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	req, err := svr.post("/personal-tokens", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -66,7 +66,7 @@ func Test_CreatePersonalToken_returns_403_if_user_without_permission(t *testing.
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Scopes: []string{"read", "write"}, Ttl: 3600,
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 2)
 	req, err := svr.postAs(u, "/personal-tokens", body)
 	require.Nil(t, err)
@@ -84,7 +84,7 @@ func Test_CreatePersonalToken_reports_422_if_no_description(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Scopes: []string{"read", "write"}, Ttl: 3600,
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.PersonalToken.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/personal-tokens", body)
@@ -106,7 +106,7 @@ func Test_CreatePersonalToken_reports_422_if_description_too_long(t *testing.T) 
 		Scopes:      []string{"read", "write"},
 		Ttl:         3600,
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.PersonalToken.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/personal-tokens", body)
@@ -126,7 +126,7 @@ func Test_CreatePersonalToken_reports_422_if_no_scope(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Ttl: 3600,
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.PersonalToken.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/personal-tokens", body)
@@ -146,7 +146,7 @@ func Test_CreatePersonalToken_reports_422_if_no_ttl(t *testing.T) {
 	body := CreatePersonalTokenJSONBody{
 		Description: "test_perm", Scopes: []string{"read", "write"},
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.PersonalToken.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/personal-tokens", body)
@@ -163,7 +163,7 @@ func Test_CreatePersonalToken_reports_422_if_no_ttl(t *testing.T) {
 }
 
 func Test_CreatePersonalToken_returns_500_if_invalid_context(t *testing.T) {
-	svr, _, _, _ := setup(t, false)
+	svr, _, _, _ := setupTestCase(t, false)
 	_, err := svr.CreatePersonalToken(
 		context.Background(), CreatePersonalTokenRequestObject{},
 	)
@@ -171,7 +171,7 @@ func Test_CreatePersonalToken_returns_500_if_invalid_context(t *testing.T) {
 }
 
 func Test_CreatePersonalToken_returns_401_if_invalid_context_token(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
+	svr, engine, _, res := setupTestCase(t, false)
 	r, err := svr.CreatePersonalToken(
 		gin.CreateTestContextOnly(res, engine),
 		CreatePersonalTokenRequestObject{},

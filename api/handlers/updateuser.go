@@ -17,12 +17,11 @@ func (s Server) UpdateUser(
 ) (UpdateUserResponseObject, error) {
 	if nil == request.Body.Email && nil == request.Body.Attr &&
 		(nil == request.Body.Roles || len(*request.Body.Roles) == 0) {
-		var s interface{} = "empty request"
 		return UpdateUser422JSONResponse{
 			N422JSONResponse: N422JSONResponse{
 				Code:   http.StatusUnprocessableEntity,
-				Status: "error",
-				Errors: &s,
+				Status: msgError,
+				Errors: &msgEmptyRequest,
 			},
 		}, nil
 	}
@@ -45,12 +44,11 @@ func (s Server) UpdateUser(
 	)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			var s interface{} = "not found"
 			return UpdateUser404JSONResponse{
 				N404JSONResponse: N404JSONResponse{
 					Code:   http.StatusNotFound,
-					Status: "error",
-					Errors: &s,
+					Status: msgError,
+					Errors: &msgNotFound,
 				},
 			}, nil
 		}

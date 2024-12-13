@@ -49,7 +49,7 @@ func (s Server) Login(
 			N401JSONResponse: N401JSONResponse{
 				Code:   http.StatusUnauthorized,
 				Errors: &api.ResponseMessageCredentialsInvalid,
-				Status: "error",
+				Status: msgError,
 			},
 		}, nil
 	}
@@ -58,7 +58,7 @@ func (s Server) Login(
 			N401JSONResponse: N401JSONResponse{
 				Code:   http.StatusUnauthorized,
 				Errors: &api.ResponseMessageCredentialsInvalid,
-				Status: "error",
+				Status: msgError,
 			},
 		}, nil
 	}

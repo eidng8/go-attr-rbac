@@ -10,7 +10,7 @@ import (
 )
 
 func Test_ReadPersonalToken_returns_a_personal_token(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	uuid7, err := uuid.NewV7()
 	require.Nil(t, err)
 	b, err := uuid7.MarshalBinary()
@@ -29,10 +29,27 @@ func Test_ReadPersonalToken_returns_a_personal_token(t *testing.T) {
 }
 
 func Test_ReadPersonalToken_returns_404_if_not_found(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/personal-token/12345")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusNotFound, res.Code)
+}
+
+func Test_ReadPersonalToken_returns_401_if_non_user(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
+	req, err := svr.get("/personal-token/2")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+}
+
+func Test_ReadPersonalToken_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	u := getUserById(t, db, 3)
+	req, err := svr.getAs(u, "/personal-token/2")
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusForbidden, res.Code)
 }

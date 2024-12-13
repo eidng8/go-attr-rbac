@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/eidng8/go-attr-rbac/ent"
 )
 
 // AssignPermissions assigns permissions to a role.
@@ -10,9 +13,23 @@ import (
 func (s Server) AssignPermissions(
 	_ context.Context, request AssignPermissionsRequestObject,
 ) (AssignPermissionsResponseObject, error) {
-	err := s.db.Role.UpdateOneID(request.Id).
-		AddPermissionIDs(*request.Body...).Exec(context.Background())
+	_, err := s.db.Debug().Transaction(
+		context.Background(),
+		func(qc context.Context, tx *ent.Tx) (interface{}, error) {
+			return nil, tx.Role.UpdateOneID(request.Id).
+				AddPermissionIDs(*request.Body...).Exec(qc)
+		},
+	)
 	if err != nil {
+		if ent.IsForeignKeyError(err) {
+			return AssignPermissions400JSONResponse{
+				N400JSONResponse: N400JSONResponse{
+					Code:   http.StatusBadRequest,
+					Errors: &msgInvalidAssignment,
+					Status: msgError,
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	return AssignPermissions204Response{}, nil

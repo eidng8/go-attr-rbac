@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,15 +11,14 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	jsoniter "github.com/json-iterator/go"
 	gmw "github.com/oapi-codegen/gin-middleware"
 
 	"github.com/eidng8/go-attr-rbac/api"
 	"github.com/eidng8/go-attr-rbac/ent"
+	"github.com/eidng8/go-attr-rbac/ent/permission"
+	"github.com/eidng8/go-attr-rbac/ent/role"
 	_ "github.com/eidng8/go-attr-rbac/ent/runtime"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Server struct {
 	db *ent.Client
@@ -74,6 +74,8 @@ func newApiHandler(server *Server, engine *gin.Engine) ServerInterface {
 				// Error handler is called directly by ServerInterfaceWrapper
 				// methods (such as ServerInterfaceWrapper.ListPermission).
 				// It doesn't get into middleware or any other lines of process.
+				// ServerInterfaceWrapper.ErrorHandler is called to handle
+				// request parameter binding errors.
 				if http.StatusBadRequest == code {
 					code = http.StatusUnprocessableEntity
 				}
@@ -152,6 +154,30 @@ func (s Server) getToken(gc *gin.Context) (*jwtToken, error) {
 		return nil, errInvalidContext
 	}
 	return token, nil
+}
+
+// Checks whether the given user has permission to perform the given operation.
+// TODO add role permission caching
+func (s Server) operationAllowed(user *ent.User, operation string) error {
+	if nil == user.Edges.Roles {
+		err := loadRoles(user)
+		if err != nil {
+			return err
+		}
+	}
+	if len(user.Edges.Roles) == 0 {
+		return errAccessDenied
+	}
+	a := utils.Pluck(user.Edges.Roles, func(r *ent.Role) uint32 { return r.ID })
+	found, err := s.db.Role.Query().Where(role.IDIn(a...)).QueryPermissions().
+		Where(permission.NameEQ(operation)).Exist(context.Background())
+	if err != nil {
+		return err
+	}
+	if found {
+		return nil
+	}
+	return errAccessDenied
 }
 
 var _ StrictServerInterface = (*Server)(nil)

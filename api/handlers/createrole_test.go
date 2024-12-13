@@ -14,7 +14,7 @@ import (
 
 func Test_CreateRole_creates_a_role(t *testing.T) {
 	body := CreateRoleJSONBody{Name: "test_role"}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/roles", body)
 	require.Nil(t, err)
@@ -35,7 +35,7 @@ func Test_CreateRole_creates_a_role(t *testing.T) {
 func Test_CreateRole_creates_a_role_with_description(t *testing.T) {
 	desc := "test descriptions"
 	body := CreateRoleJSONBody{Name: "test_role", Description: &desc}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/roles", body)
 	require.Nil(t, err)
@@ -54,10 +54,10 @@ func Test_CreateRole_creates_a_role_with_description(t *testing.T) {
 	require.Equal(t, actual.Id, row.ID)
 }
 
-func Test_CreateRole_denies_non_user(t *testing.T) {
+func Test_CreateRole_returns_401_if_non_user(t *testing.T) {
 	desc := "test descriptions"
 	body := CreateRoleJSONBody{Name: "test_role", Description: &desc}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	req, err := svr.post("/roles", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -70,10 +70,10 @@ func Test_CreateRole_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_CreateRole_denies_user_without_permission(t *testing.T) {
+func Test_CreateRole_returns_403_if_user_without_permission(t *testing.T) {
 	desc := "test descriptions"
 	body := CreateRoleJSONBody{Name: "test_role", Description: &desc}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 2)
 	req, err := svr.postAs(u, "/roles", body)
 	require.Nil(t, err)
@@ -88,7 +88,7 @@ func Test_CreateRole_denies_user_without_permission(t *testing.T) {
 }
 
 func Test_CreateRole_reports_422_if_no_name(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.Role.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/roles", CreateRoleJSONBody{})
@@ -102,7 +102,7 @@ func Test_CreateRole_reports_422_if_no_name(t *testing.T) {
 }
 
 func Test_CreateRole_reports_422_if_name_too_long(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.Role.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	s := strings.Repeat("a", 256)
@@ -120,7 +120,7 @@ func Test_CreateRole_reports_422_if_name_too_long(t *testing.T) {
 func Test_CreateRole_reports_422_if_description_too_long(t *testing.T) {
 	desc := strings.Repeat("a", 256)
 	body := CreateRoleJSONBody{Name: "test_role", Description: &desc}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.Role.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/roles", body)
@@ -136,7 +136,7 @@ func Test_CreateRole_reports_422_if_description_too_long(t *testing.T) {
 
 func Test_CreateRole_reports_400_if_role_exists(t *testing.T) {
 	body := CreateRoleJSONBody{Name: "root"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.Role.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/roles", body)

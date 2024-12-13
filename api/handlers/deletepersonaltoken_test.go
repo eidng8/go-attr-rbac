@@ -13,7 +13,7 @@ import (
 )
 
 func Test_DeletePersonalToken_deletes_a_personal_token(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	jti, err := uuid.NewV7()
 	require.Nil(t, err)
 	b, err := jti.MarshalBinary()
@@ -32,16 +32,16 @@ func Test_DeletePersonalToken_deletes_a_personal_token(t *testing.T) {
 	)
 }
 
-func Test_DeletePersonalToken_denies_non_user(t *testing.T) {
-	svr, engine, _, res := setup(t, false)
+func Test_DeletePersonalToken_returns_401_if_non_user(t *testing.T) {
+	svr, engine, _, res := setupTestCase(t, false)
 	req, err := svr.delete("/personal-token/2")
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusUnauthorized, res.Code)
 }
 
-func Test_DeletePersonalToken_denies_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+func Test_DeletePersonalToken_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 2)
 	req, err := svr.deleteAs(u, "/personal-token/2")
 	require.Nil(t, err)
@@ -50,7 +50,7 @@ func Test_DeletePersonalToken_denies_user_without_permission(t *testing.T) {
 }
 
 func Test_DeletePersonalToken_reports_404_if_user_exists(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/personal-token/12345")
 	require.Nil(t, err)
@@ -59,7 +59,7 @@ func Test_DeletePersonalToken_reports_404_if_user_exists(t *testing.T) {
 }
 
 func Test_DeletePersonalToken_reports_422_if_invalid_id(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/personal-token/a")
 	require.Nil(t, err)

@@ -13,63 +13,98 @@ import (
 )
 
 func Test_AssignPermissions_attaches_permission_to_role(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
-	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).All(context.Background())
+	svr, engine, db, res := setupTestCase(t, true)
+	rows, err := db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
 	require.NotEmpty(t, rows)
-	ids := utils.Pluck(rows, pluckPermissionId)
+	ids := append(utils.Pluck(rows, pluckPermissionId), 10)
 	usr := getUserById(t, db, 1)
-	req, err := svr.postAs(usr, "/role/3/permissions", ids)
+	req, err := svr.postAs(usr, "/role/2/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusNoContent, res.Code)
-	rows, err = db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		Select(permission.FieldID).Limit(3).All(context.Background())
+	rows, err = db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
 	require.Equal(t, ids, utils.Pluck(rows, pluckPermissionId))
 }
 
 func Test_AssignPermissions_reports_422_if_permission_is_empty(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
-	usr := getUserById(t, db, 1)
-	req, err := svr.postAs(usr, "/role/3/permissions", nil)
-	require.Nil(t, err)
-	engine.ServeHTTP(res, req)
-	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
-}
-
-func Test_AssignPermissions_returns_401_if_non_user(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
-	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).All(context.Background())
+	svr, engine, db, res := setupTestCase(t, false)
+	rows, err := db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
 	require.NotEmpty(t, rows)
 	ids := utils.Pluck(rows, pluckPermissionId)
-	req, err := svr.post("/role/3/permissions", ids)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/role/2/permissions", nil)
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
+	rows, err = db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
+	require.Nil(t, err)
+	require.Equal(t, ids, utils.Pluck(rows, pluckPermissionId))
+}
+
+func Test_AssignPermissions_reports_400_if_role_not_found(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/role/123/permissions", []int{1})
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusBadRequest, res.Code)
+}
+
+func Test_AssignPermissions_reports_400_if_permission_not_found(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/role/2/permissions", []int{1234})
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusBadRequest, res.Code)
+}
+
+func Test_AssignPermissions_returns_401_if_non_user(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	rows, err := db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
+	require.Nil(t, err)
+	require.NotEmpty(t, rows)
+	ids := utils.Pluck(rows, pluckPermissionId)
+	req, err := svr.post("/role/2/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusUnauthorized, res.Code)
-	ex, err := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		Exist(context.Background())
+	rows, err = db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
-	require.False(t, ex)
+	require.Equal(t, ids, utils.Pluck(rows, pluckPermissionId))
 }
 
 func Test_AssignPermissions_returns_403_if_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
-	rows, err := db.Permission.Query().Select(permission.FieldID).Limit(3).
-		Order(permission.ByID()).All(context.Background())
+	svr, engine, db, res := setupTestCase(t, false)
+	rows, err := db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
 	require.NotEmpty(t, rows)
 	ids := utils.Pluck(rows, pluckPermissionId)
 	usr := getUserById(t, db, 3)
-	req, err := svr.postAs(usr, "/role/3/permissions", ids)
+	req, err := svr.postAs(usr, "/role/2/permissions", ids)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
 	require.Equal(t, http.StatusForbidden, res.Code)
-	ex, err := db.Role.Query().Where(role.IDEQ(3)).QueryPermissions().
-		Exist(context.Background())
+	rows, err = db.Role.Query().Where(role.IDEQ(2)).QueryPermissions().
+		Select(permission.FieldID).Order(permission.ByID()).
+		All(context.Background())
 	require.Nil(t, err)
-	require.False(t, ex)
+	require.Equal(t, ids, utils.Pluck(rows, pluckPermissionId))
 }

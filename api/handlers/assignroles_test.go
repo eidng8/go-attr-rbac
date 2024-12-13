@@ -13,7 +13,7 @@ import (
 )
 
 func Test_AssignRoles_attaches_role_to_user(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	rows, err := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).All(context.Background())
 	require.Nil(t, err)
@@ -32,7 +32,7 @@ func Test_AssignRoles_attaches_role_to_user(t *testing.T) {
 }
 
 func Test_AssignRoles_reports_422_if_role_is_empty(t *testing.T) {
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	usr := getUserById(t, db, 1)
 	req, err := svr.postAs(usr, "/user/3/roles", nil)
 	require.Nil(t, err)
@@ -40,8 +40,26 @@ func Test_AssignRoles_reports_422_if_role_is_empty(t *testing.T) {
 	require.Equal(t, http.StatusUnprocessableEntity, res.Code)
 }
 
-func Test_AssignRoles_denies_non_user(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+func Test_AssignRoles_reports_404_if_user_not_found(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/user/123/roles", []int{1})
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusNotFound, res.Code)
+}
+
+func Test_AssignRoles_reports_400_if_role_not_found(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
+	usr := getUserById(t, db, 1)
+	req, err := svr.postAs(usr, "/user/2/roles", []int{1234})
+	require.Nil(t, err)
+	engine.ServeHTTP(res, req)
+	require.Equal(t, http.StatusBadRequest, res.Code)
+}
+
+func Test_AssignRoles_returns_401_if_non_user(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
 	rows, err := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).All(context.Background())
 	require.Nil(t, err)
@@ -57,8 +75,8 @@ func Test_AssignRoles_denies_non_user(t *testing.T) {
 	require.False(t, ex)
 }
 
-func Test_AssignRoles_denies_user_without_permission(t *testing.T) {
-	svr, engine, db, res := setup(t, false)
+func Test_AssignRoles_returns_403_if_user_without_permission(t *testing.T) {
+	svr, engine, db, res := setupTestCase(t, false)
 	rows, err := db.Role.Query().Select(role.FieldID).Limit(3).
 		Order(role.ByID()).All(context.Background())
 	require.Nil(t, err)

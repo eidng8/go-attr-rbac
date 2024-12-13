@@ -34,7 +34,7 @@ var (
 // new database for testing populated with fixture data. If `refresh` is true,
 // the database will be closed after the test; otherwise the database will
 // be left open for further testing.
-func setup(tb testing.TB, refresh bool) (
+func setupTestCase(tb testing.TB, refresh bool) (
 	*Server, *gin.Engine, *ent.Client, *httptest.ResponseRecorder,
 ) {
 	api.Log.Debug = true

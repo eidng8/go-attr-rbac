@@ -62,7 +62,7 @@ func Test_validatePassword_accepts_complex_password(t *testing.T) {
 
 func Test_CreateUser_creates_a_user(t *testing.T) {
 	body := CreateUserJSONBody{Username: "test_user", Password: "Abcd_1234"}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
 	require.Nil(t, err)
@@ -86,7 +86,7 @@ func Test_CreateUser_creates_a_user_with_email(t *testing.T) {
 	body := CreateUserJSONBody{
 		Username: "test_user", Password: "Abcd_1234", Email: &email,
 	}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
 	require.Nil(t, err)
@@ -109,7 +109,7 @@ func Test_CreateUser_creates_a_user_with_roles(t *testing.T) {
 	body := CreateUserJSONBody{
 		Username: "test_user", Password: "Abcd_1234", Roles: &[]uint32{2, 3},
 	}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
 	require.Nil(t, err)
@@ -135,7 +135,7 @@ func Test_CreateUser_creates_a_user_with_attr(t *testing.T) {
 		Username: "test_user", Password: "Abcd_1234",
 		Attr: userAttrOf(321, 123),
 	}
-	svr, engine, db, res := setup(t, true)
+	svr, engine, db, res := setupTestCase(t, true)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
 	require.Nil(t, err)
@@ -155,9 +155,9 @@ func Test_CreateUser_creates_a_user_with_attr(t *testing.T) {
 	require.Equal(t, float64(123), (*row.Attr)["level"])
 }
 
-func Test_CreateUser_denies_non_user(t *testing.T) {
+func Test_CreateUser_returns_401_if_non_user(t *testing.T) {
 	body := CreateUserJSONBody{Username: "test_user", Password: "Abcd_1234"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	req, err := svr.post("/users", body)
 	require.Nil(t, err)
 	engine.ServeHTTP(res, req)
@@ -169,9 +169,9 @@ func Test_CreateUser_denies_non_user(t *testing.T) {
 	)
 }
 
-func Test_CreateUser_denies_user_without_permission(t *testing.T) {
+func Test_CreateUser_returns_403_if_user_without_permission(t *testing.T) {
 	body := CreateUserJSONBody{Username: "test_user", Password: "Abcd_1234"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 2)
 	req, err := svr.postAs(u, "/users", body)
 	require.Nil(t, err)
@@ -186,7 +186,7 @@ func Test_CreateUser_denies_user_without_permission(t *testing.T) {
 
 func Test_CreateUser_reports_422_if_no_username(t *testing.T) {
 	body := CreateUserJSONBody{Password: "Abcd_1234"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
@@ -204,7 +204,7 @@ func Test_CreateUser_reports_422_if_name_too_long(t *testing.T) {
 	body := CreateUserJSONBody{
 		Username: strings.Repeat("a", 256), Password: "Abcd_1234",
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
@@ -220,7 +220,7 @@ func Test_CreateUser_reports_422_if_name_too_long(t *testing.T) {
 
 func Test_CreateUser_reports_422_if_no_password(t *testing.T) {
 	body := CreateUserJSONBody{Username: "test_user"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
@@ -238,7 +238,7 @@ func Test_CreateUser_reports_422_if_password_too_long(t *testing.T) {
 	body := CreateUserJSONBody{
 		Username: "test_user", Password: strings.Repeat("a", 256),
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)
@@ -256,7 +256,7 @@ func Test_CreateUser_reports_422_if_password_too_simple(t *testing.T) {
 	passwords := []string{
 		"abcdefgh", "ABCDEFGH", "12345678", "#?!abcdE", "#?!123456",
 	}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	for _, pass := range passwords {
@@ -280,7 +280,7 @@ func Test_CreateUser_reports_422_if_password_too_simple(t *testing.T) {
 
 func Test_CreateUser_reports_400_if_user_exists(t *testing.T) {
 	body := CreateUserJSONBody{Username: "root", Password: "Abcd_1234"}
-	svr, engine, db, res := setup(t, false)
+	svr, engine, db, res := setupTestCase(t, false)
 	count := db.User.Query().CountX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/users", body)

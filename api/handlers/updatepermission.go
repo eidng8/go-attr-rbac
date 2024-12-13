@@ -15,12 +15,11 @@ func (s Server) UpdatePermission(
 ) (UpdatePermissionResponseObject, error) {
 	if nil == request.Body.Name && nil == request.Body.Description &&
 		(nil == request.Body.Roles || len(*request.Body.Roles) == 0) {
-		var s interface{} = "empty request"
 		return UpdatePermission422JSONResponse{
 			N422JSONResponse: N422JSONResponse{
 				Code:   http.StatusUnprocessableEntity,
-				Status: "error",
-				Errors: &s,
+				Status: msgError,
+				Errors: &msgEmptyRequest,
 			},
 		}, nil
 	}
@@ -43,12 +42,11 @@ func (s Server) UpdatePermission(
 	)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			var s interface{} = "not found"
 			return UpdatePermission404JSONResponse{
 				N404JSONResponse: N404JSONResponse{
 					Code:   http.StatusNotFound,
-					Status: "error",
-					Errors: &s,
+					Status: msgError,
+					Errors: &msgNotFound,
 				},
 			}, nil
 		}
