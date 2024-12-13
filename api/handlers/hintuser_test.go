@@ -10,7 +10,7 @@ import (
 )
 
 func Test_HintUsers_returns_5_rows(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	svr.hintSize = 5
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/q/users?q=u")
@@ -22,7 +22,7 @@ func Test_HintUsers_returns_5_rows(t *testing.T) {
 }
 
 func Test_HintUsers_searches_by_email(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	svr.hintSize = 5
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/q/users?q=email")

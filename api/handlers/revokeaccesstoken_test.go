@@ -113,7 +113,7 @@ func Test_RevokeAccessToken_clears_current_tokens(t *testing.T) {
 }
 
 func Test_RevokeAccessToken_returns_401_if_invalid_access_token(t *testing.T) {
-	svr, engine, _, res := setupTestCase(t, true)
+	svr, engine, _, res := setupTestCase(t, false)
 	req, err := http.NewRequest(http.MethodDelete, "/access-token", nil)
 	require.Nil(t, err)
 	req.AddCookie(

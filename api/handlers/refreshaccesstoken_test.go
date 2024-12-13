@@ -11,7 +11,7 @@ import (
 )
 
 func Test_RefreshAccessToken_sets_token_cookies(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/access-token/refresh", nil)
 	require.Nil(t, err)
@@ -33,7 +33,7 @@ func Test_RefreshAccessToken_sets_token_cookies(t *testing.T) {
 }
 
 func Test_RefreshAccessToken_returns_401_if_invalid_refresh_token(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := http.NewRequest(http.MethodPost, "/access-token/refresh", nil)
 	require.Nil(t, err)

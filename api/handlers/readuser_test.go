@@ -10,7 +10,7 @@ import (
 )
 
 func Test_ReadUser_returns_a_user(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2")
 	require.Nil(t, err)
@@ -23,7 +23,7 @@ func Test_ReadUser_returns_a_user(t *testing.T) {
 }
 
 func Test_ReadUser_returns_trashed_user(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2?trashed=1")
@@ -37,7 +37,7 @@ func Test_ReadUser_returns_trashed_user(t *testing.T) {
 }
 
 func Test_ReadUser_returns_404_if_not_found(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/12345")
 	require.Nil(t, err)
@@ -46,7 +46,7 @@ func Test_ReadUser_returns_404_if_not_found(t *testing.T) {
 }
 
 func Test_ReadUser_returns_404_if_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/user/2")
@@ -56,7 +56,7 @@ func Test_ReadUser_returns_404_if_soft_deleted(t *testing.T) {
 }
 
 func Test_ReadUser_returns_a_user_without_email(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	n := db.User.Create().SetUsername("test user").SetPassword("test password").
 		SaveX(context.Background())
 	u := getUserById(t, db, 1)

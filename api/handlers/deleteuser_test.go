@@ -82,7 +82,7 @@ func Test_DeleteUser_reports_404_if_user_not_exists(t *testing.T) {
 }
 
 func Test_DeleteUser_reports_404_if_user_was_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	db.User.DeleteOneID(2).ExecX(context.Background())
 	u := getUserById(t, db, 1)
 	req, err := svr.deleteAs(u, "/user/2")

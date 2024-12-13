@@ -50,7 +50,7 @@ func Test_RestoreUser_reports_404_if_user_not_exists(t *testing.T) {
 }
 
 func Test_RestoreUser_reports_404_if_user_not_soft_deleted(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.postAs(u, "/user/2/restore", nil)
 	require.Nil(t, err)

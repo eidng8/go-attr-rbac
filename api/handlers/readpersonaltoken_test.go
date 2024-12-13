@@ -10,7 +10,7 @@ import (
 )
 
 func Test_ReadPersonalToken_returns_a_personal_token(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	uuid7, err := uuid.NewV7()
 	require.Nil(t, err)
 	b, err := uuid7.MarshalBinary()
@@ -29,7 +29,7 @@ func Test_ReadPersonalToken_returns_a_personal_token(t *testing.T) {
 }
 
 func Test_ReadPersonalToken_returns_404_if_not_found(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/personal-token/12345")
 	require.Nil(t, err)

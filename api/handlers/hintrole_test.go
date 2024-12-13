@@ -10,7 +10,7 @@ import (
 )
 
 func Test_HintRoles_returns_5_rows(t *testing.T) {
-	svr, engine, db, res := setupTestCase(t, true)
+	svr, engine, db, res := setupTestCase(t, false)
 	svr.hintSize = 5
 	u := getUserById(t, db, 1)
 	req, err := svr.getAs(u, "/q/roles?q=r")
