@@ -336,7 +336,11 @@ func (s Server) issueJwtTokenWithClaims(
 	method jwt.SigningMethod, claims *accessTokenClaims,
 ) (string, error) {
 	t := jwt.NewWithClaims(method, claims)
-	ts, err := t.SignedString(s.secret)
+	key, err := s.getSecret(nil)
+	if err != nil {
+		return "", err
+	}
+	ts, err := t.SignedString(key)
 	if err != nil {
 		return "", err
 	}

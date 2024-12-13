@@ -215,3 +215,8 @@ func getTokensFromSetCookieHeaders(
 	}
 	return
 }
+
+func Test_Domain_returns_empty_string_if_error(t *testing.T) {
+	svr := Server{baseUrl: "\x01"}
+	require.Empty(t, svr.Domain())
+}
